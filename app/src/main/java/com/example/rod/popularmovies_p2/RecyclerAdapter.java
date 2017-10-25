@@ -135,16 +135,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
         final String r_sinopse = listItem.getSinopse();
         final String r_movieID = listItem.getId();
 
-        /*
-        Log.v("RAG", ">>r_titulo:"+r_titulo);
-        Log.v("RAG", ">>r_ano:"+r_ano);
-        Log.v("RAG", ">>r_rating:"+r_rating);
-        Log.v("RAG", ">>r_sinopse:"+r_sinopse);
-        Log.v("RAG", ">>r_movieID:"+r_movieID);
-        Log.v("RAG", ">>imagePathOnPhone:"+imagePathOnPhone);
-        Log.v("RAG", ">>------------------------------");
-        */
-
         //Picasso.with(context)
         //       .load(listItem.getUrlCapa())
         //       .into(holder.capaFilme);
@@ -165,15 +155,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
                             //Log.v("RAG", "saving image:"+imagePathOnPhone);
                             //Log.v("RAG", "path :"+aa);
 
-                            /*
-                            Log.v("RAG", "r_titulo:"+r_titulo);
-                            Log.v("RAG", "r_ano:"+r_ano);
-                            Log.v("RAG", "r_rating:"+r_rating);
-                            Log.v("RAG", "r_sinopse:"+r_sinopse);
-                            Log.v("RAG", "r_movieID:"+r_movieID);
-                            Log.v("RAG", "imagePathOnPhone:"+imagePathOnPhone);
-                            Log.v("RAG", "------------------------------");
-                            */
 
                         }catch (Exception ex){
                             Log.v("RAG", "fail saving image:"+ex.toString());
@@ -221,10 +202,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
         {
             a = 0;
         }
-
-        //Log.v("RAG", "mcount:"+mCount);
-        //Log.v("RAG", "a:"+a);
-
 
         return a;
     }

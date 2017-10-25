@@ -2,6 +2,8 @@ package com.example.rod.popularmovies_p2;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.v4.app.LoaderManager;
@@ -16,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.rod.popularmovies_p2.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -78,20 +81,24 @@ public class childActivity extends AppCompatActivity
 
         Intent intent2 = getIntent();
 
+
+        /*
         if(intent2.hasExtra("titulo")){
             titulo.setText(intent2.getStringExtra("titulo"));
         }else{
             titulo.setText("");
         }
+        */
 
         //id
         if(intent2.hasExtra("movieID")){
+
             movieID = intent2.getStringExtra("movieID");
 
             pathReview = String.format( getString(R.string.base_url_trailer), movieID, getString(R.string.APIKEY));
             movieReview = String.format( getString(R.string.base_url_review), movieID, getString(R.string.APIKEY));
-            Log.v("RAG","pathReview:"+pathReview);
-            Log.v("RAG","movieReview:"+movieReview);
+            //Log.v("RAG","pathReview:"+pathReview);
+            //Log.v("RAG","movieReview:"+movieReview);
 
         }else{
             Log.v("RAG","no movie id");
@@ -241,7 +248,6 @@ public class childActivity extends AppCompatActivity
 
                     JSONObject jsonObject = new JSONObject(strJsonResult);
                     JSONArray array = jsonObject.getJSONArray("results");
-                    Log.v("RAG","strJsonResult():"+strJsonResult);
 
                     listReviews.clear();
 
@@ -254,10 +260,9 @@ public class childActivity extends AppCompatActivity
                         String link = o.getString("url");
 
                         Review item = new Review(id, author, content, link);
-
                         listReviews.add(item);
-                        Log.v("RAG", "author:"+author);
-                        Log.v("RAG", "content:"+content);
+                        //Log.v("RAG", "author:"+author);
+                        //Log.v("RAG", "content:"+content);
                     }
 
                 } catch (IOException e1) {
@@ -315,6 +320,47 @@ public class childActivity extends AppCompatActivity
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
+    }
+
+
+
+
+    private Cursor getMovie(String movieID) {
+
+        /*
+       SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.query(TABLE_CONTACTS, new String[] { KEY_ID,
+                KEY_NAME, KEY_PH_NO }, KEY_ID + "=?",
+                new String[] { String.valueOf(id) }, null, null, null, null);
+        if (cursor != null)
+            cursor.moveToFirst();
+
+        Contact contact = new Contact(Integer.parseInt(cursor.getString(0)),
+                cursor.getString(1), cursor.getString(2));
+        // return contact
+        return contact;
+    }
+         */
+
+        MovieDbHelper dbHelper = new MovieDbHelper(this);
+        SQLiteDatabase mDB = dbHelper.getReadableDatabase();
+
+        String selection = MovieContract.MovieListEntry.COLUMN_IDMOVIE + "=?";
+        String[] selectionArgs = {movieID};
+
+        Cursor cursor = mDB.query(
+                MovieContract.MovieListEntry.TABLE_NAME,
+                null,
+                selection,
+                selectionArgs,
+                null,
+                MovieContract.MovieListEntry.COLUMN_TITULO,
+                "1"
+        );
+
+        return cursor;
+
     }
 
 

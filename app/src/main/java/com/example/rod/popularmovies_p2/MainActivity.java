@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -44,9 +45,10 @@ public class MainActivity extends AppCompatActivity
 
     private RecyclerView recMainActivity;
     private RecyclerAdapter recyclerAdapter;
-    private List<Movies> listMovies;
+    private List<Movies> listMovies = new ArrayList<>();
     private String urlJSON="";
     private SQLiteDatabase mDb; //database
+    private MovieDbHelper dbHelper;
 
     private static final int thumbLoaderID= 22;
 
@@ -63,27 +65,20 @@ public class MainActivity extends AppCompatActivity
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getBaseContext(), 2);
         recMainActivity.setLayoutManager(gridLayoutManager);
 
-        listMovies = new ArrayList<>();
-
-        // Create a DB helper (this will create the DB if run for the first time)
-        MovieDbHelper dbHelper = new MovieDbHelper(this);
-
-        // Keep a reference to the mDb until paused or killed. Get a writable database
-        // because you will be adding restaurant customers
-        mDb = dbHelper.getWritableDatabase();
-        //mDb1 = dbHelper.getWritableDatabase();
-
         //Cursor cursor = getAllMovies();
         recyclerAdapter = new RecyclerAdapter(listMovies, getBaseContext());
 
         recMainActivity.setAdapter(recyclerAdapter);
         urlJSON = String.format( getString(R.string.base_url_popular),getString(R.string.APIKEY));
 
-
         try {
 
+            if(isOnline()){
 
-            if(!isOnline()){
+                // Create a DB helper (this will create the DB if run for the first time)
+                dbHelper = new MovieDbHelper(this);
+
+                mDb = dbHelper.getWritableDatabase();
 
                 Bundle queryBundle = new Bundle();
                 queryBundle.putString(SEARCH_URL, urlJSON);
@@ -153,6 +148,7 @@ public class MainActivity extends AppCompatActivity
             public String loadInBackground() {
 
                 try {
+
                     Log.v("RAG","loadInBackground()");
                     String searchQueryUrlString = args.getString(SEARCH_URL);
 
@@ -161,7 +157,7 @@ public class MainActivity extends AppCompatActivity
 
                     JSONObject jsonObject = new JSONObject(strJsonResult);
                     JSONArray array = jsonObject.getJSONArray("results");
-                    Log.v("RAG","strJsonResult():"+strJsonResult);
+
 
                     listMovies.clear();
 
@@ -190,8 +186,8 @@ public class MainActivity extends AppCompatActivity
 
                         listMovies.add(item);
 
-                        addNewMovies(item);
-
+                        long numID = addNewMovies(item);
+                        Log.v("RAG","numID:"+numID);
 
                     }
 
@@ -386,43 +382,42 @@ public class MainActivity extends AppCompatActivity
     //
     // DB functions
     //
+
     private long addNewMovies(Movies movie){
 
-        ContentValues cv = new ContentValues();
-        cv.put(COLUMN_TITULO, movie.getTitulo());
-        cv.put(COLUMN_IDMOVIE, movie.getId());
-        cv.put(COLUMN_ANO, movie.getAno());
-        cv.put(COLUMN_SINOPSE, movie.getSinopse());
-        cv.put(COLUMN_RATING, movie.getRating());
-        //cv.put(COLUMN_FAVORITOS, movie.getTitulo());
-        cv.put(COLUMN_IMAGEPATH, movie.getUrlCapa());
+        long idMovieRecord = 0;
+        try
+        {
+            ContentValues cv = new ContentValues();
+            cv.put(COLUMN_TITULO, movie.getTitulo());
+            cv.put(COLUMN_IDMOVIE, movie.getId());
+            cv.put(COLUMN_ANO, movie.getAno());
+            cv.put(COLUMN_SINOPSE, movie.getSinopse());
+            cv.put(COLUMN_RATING, movie.getRating());
+            //cv.put(COLUMN_FAVORITOS, movie.getTitulo());
+            cv.put(COLUMN_IMAGEPATH, movie.getUrlCapa());
 
-        Log.v("RAG", ">>r_titulo:"+movie.getTitulo());
-        Log.v("RAG", ">>r_ano:"+movie.getAno());
-        Log.v("RAG", ">>r_rating:"+movie.getRating());
-        Log.v("RAG", ">>r_sinopse:"+movie.getSinopse());
-        Log.v("RAG", ">>r_movieID:"+movie.getId());
-        Log.v("RAG", ">>imagePathOnPhone:"+movie.getUrlCapa());
-        Log.v("RAG", ">>------------------------------");
 
-        return mDb.insert(TABLE_NAME, null, cv);
+            mDb.beginTransaction();
+
+            idMovieRecord =  mDb.insert(TABLE_NAME, null, cv);
+
+            mDb.setTransactionSuccessful();
+        }
+        catch (SQLException e) {
+            Log.v("RAG",e.toString());
+            //too bad :(
+        }
+
+        finally
+        {
+            mDb.endTransaction();
+        }
+
+        return idMovieRecord;
 
     }
 
-    /**
-     * Query the mDb and get all guests from the waitlist table
-     *
-     * @return Cursor containing the list of guests
-     */
-    private Cursor getAllMovies() {
-        return mDb.query(
-                MovieContract.MovieListEntry.TABLE_NAME,
-                null,
-                null,
-                null,
-                null,
-                null,
-                MovieContract.MovieListEntry.COLUMN_TITULO
-        );
-    }
+
+
 }
