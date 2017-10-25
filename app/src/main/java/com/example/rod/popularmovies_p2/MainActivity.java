@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity
         mDb = dbHelper.getWritableDatabase();
         //mDb1 = dbHelper.getWritableDatabase();
 
-
         //Cursor cursor = getAllMovies();
         recyclerAdapter = new RecyclerAdapter(listMovies, getBaseContext());
 
@@ -81,17 +80,13 @@ public class MainActivity extends AppCompatActivity
         urlJSON = String.format( getString(R.string.base_url_popular),getString(R.string.APIKEY));
 
 
-
-        //Log.v("RAG", urlJSON);
-        //Log.v("RAG", urlJSON
-
         try {
 
 
             if(!isOnline()){
 
                 Bundle queryBundle = new Bundle();
-                queryBundle.putString(SEARCH_URL, urlJSON.toString());
+                queryBundle.putString(SEARCH_URL, urlJSON);
 
                 LoaderManager loaderManager = getSupportLoaderManager();
                 Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
@@ -162,9 +157,7 @@ public class MainActivity extends AppCompatActivity
                     String searchQueryUrlString = args.getString(SEARCH_URL);
 
                     URL urlSearch = new URL(searchQueryUrlString);
-                    String strJsonResult="";
-
-                    strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
+                    String strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
 
                     JSONObject jsonObject = new JSONObject(strJsonResult);
                     JSONArray array = jsonObject.getJSONArray("results");

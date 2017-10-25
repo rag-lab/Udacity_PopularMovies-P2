@@ -8,7 +8,7 @@
     <string name="base_url_review">http://api.themoviedb.org/3/movie/%1$s/reviews?api_key=%2$s</string>
     <string name="base_url_trailer">http://api.themoviedb.org/3/movie/%1$s/videos?api_key=%2$s</string>
 
-    <string name="APIKEY">MYAPIKEY</string>
+    <string name="APIKEY">8481813f6a52db086ab5d607c8c94667</string>
     <string name="tag">RAG</string>
     <string name="NOINTERNET">No internet connection, please check.</string>
 
