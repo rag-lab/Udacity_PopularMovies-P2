@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.rod.popularmovies_p2.childActivity"
+    android:fillViewport="true"
+    >
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+        <!-- titulo-->
+        <TextView
+            android:id="@+id/titulo"
+            android:layout_width="match_parent"
+            android:layout_height="92dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="@dimen/paddingLeft10"
+            android:paddingStart="@dimen/paddingRight10"
+            android:textSize="@dimen/txtTitulo24"
+            android:layout_centerHorizontal="true"
+            tools:layout_editor_absoluteY="0dp"
+            tools:layout_editor_absoluteX="0dp"
+            android:text="Titulo"/>
+
+        <!-- thumb -->
+        <ImageView
+            android:layout_width="@dimen/thumbWidth"
+            android:layout_height="@dimen/thumbHeight"
+            android:id="@+id/thumb"
+            android:layout_below="@+id/titulo"
+            android:contentDescription="@string/POSTERIMAGE"/>
+
+        <!--  ano -->
+        <TextView
+            android:id="@+id/ano"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/titulo"
+            android:layout_toRightOf="@+id/thumb"
+            android:layout_toEndOf="@+id/thumb"
+            android:layout_marginTop="@dimen/margin15"
+            android:paddingLeft="@dimen/padding15"
+            android:paddingStart="@dimen/padding15"
+            android:textSize="@dimen/txtAno20"
+            android:text="2017"/>
+
+        <!-- rating -->
+        <TextView
+            android:id="@+id/rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:layout_below="@+id/ano"
+            android:layout_toRightOf="@+id/thumb"
+            android:layout_toEndOf="@+id/thumb"
+            android:layout_marginLeft="@dimen/padding15"
+            android:layout_marginStart="@dimen/padding15"
+            android:layout_marginTop="@dimen/margin5"
+            android:text="4.3"/>
+
+        <!-- sinopse -->
+        <TextView
+            android:id="@+id/sinopse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin15"
+            android:layout_below="@+id/thumb"
+            android:layout_alignLeft="@+id/thumb"
+            android:layout_alignStart="@+id/thumb"
+            android:paddingRight="@dimen/paddingRight10"
+            android:paddingLeft="@dimen/paddingLeft10"
+            android:text="Sinopste"/>
+
+        <TextView
+            android:id="@+id/labelReview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin15"
+            android:layout_below="@+id/sinopse"
+            android:paddingRight="@dimen/paddingRight10"
+            android:paddingLeft="@dimen/paddingLeft10"
+            android:text="Review:"/>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerviewReview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="vertical"
+            android:layout_below="@id/labelReview"/>
+
+
+
+    </RelativeLayout>
+
+
+
+
+</ScrollView>

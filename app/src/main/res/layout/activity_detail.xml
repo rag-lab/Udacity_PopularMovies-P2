@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.rod.popularmovies_p2.detail"
+    android:fillViewport="true"
+    >
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+        <!-- titulo-->
+        <TextView
+            android:id="@+id/titulo"
+            android:layout_width="match_parent"
+            android:layout_height="92dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="10dp"
+            android:paddingStart="10dp"
+            android:textSize="24sp"
+            android:layout_centerHorizontal="true"
+            tools:layout_editor_absoluteY="0dp"
+            tools:layout_editor_absoluteX="0dp" />
+
+        <!-- thumb-->
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="270dp"
+            android:id="@+id/thumb"
+            android:layout_below="@+id/titulo"
+            android:contentDescription="@string/POSTERIMAGE"/>
+
+        <!-- ano-->
+        <TextView
+            android:id="@+id/ano"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:layout_below="@+id/titulo"
+            android:layout_toRightOf="@+id/thumb"
+            android:layout_toEndOf="@+id/thumb"
+            android:layout_marginTop="15dp"
+            android:paddingLeft="15dp"
+            android:paddingStart="15dp"/>
+
+        <!-- rating-->
+        <TextView
+            android:id="@+id/rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="12sp"
+            android:layout_below="@+id/ano"
+            android:layout_toRightOf="@+id/thumb"
+            android:layout_toEndOf="@+id/thumb"
+            android:layout_marginLeft="15dp"
+            android:layout_marginStart="15dp"
+            android:layout_marginTop="5dp"/>
+
+        <!-- bt favorite-->
+        <!--
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mark as Favorite"
+        android:layout_marginTop="12dp"
+        android:layout_below="@+id/rating"
+        android:layout_alignLeft="@+id/rating"
+        android:layout_alignStart="@+id/rating" />
+-->
+
+        <!-- sinopse-->
+        <TextView
+            android:id="@+id/sinopse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:layout_below="@+id/thumb"
+            android:layout_alignLeft="@+id/thumb"
+            android:layout_alignStart="@+id/thumb"
+            android:paddingRight="@+id/paddingRight"
+            android:paddingLeft="@+id/paddingLeft"/>
+
+
+    </RelativeLayout>
+
+</ScrollView>

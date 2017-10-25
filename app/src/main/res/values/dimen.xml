@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="thumbHeight">270dp</dimen>
+    <dimen name="thumbWidth">200dp</dimen>
+
+    <dimen name="padding15">15dp</dimen>
+    <dimen name="padding_15">15dp</dimen>
+    <dimen name="paddingLeft10">10dp</dimen>
+    <dimen name="paddingRight10">10dp</dimen>
+    <dimen name="txtTitulo24">24sp</dimen>
+    <dimen name="txtAno20">20sp</dimen>
+
+    <dimen name="margin15">15dp</dimen>
+    <dimen name="margin5">5dp</dimen>
+
+</resources>
