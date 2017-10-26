@@ -6,9 +6,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -28,7 +31,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -75,32 +83,39 @@ public class MainActivity extends AppCompatActivity
 
             if(isOnline()){
 
-                // Create a DB helper (this will create the DB if run for the first time)
                 dbHelper = new MovieDbHelper(this);
-
                 mDb = dbHelper.getWritableDatabase();
 
-                Bundle queryBundle = new Bundle();
-                queryBundle.putString(SEARCH_URL, urlJSON);
+                if(hasDbRecords()){
+                    Log.v("RAG", "db has records");
 
-                LoaderManager loaderManager = getSupportLoaderManager();
-                Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
+                }else{
 
-                // COMPLETED (23) If the Loader was null, initialize it. Else, restart it.
-                if (thumbsLoader == null) {
-                    Log.v("RAG", "loader inicializado");
-                    loaderManager.initLoader(thumbLoaderID, queryBundle, this);
-                } else {
-                    Log.v("RAG", "loader re-inicializado");
-                    loaderManager.restartLoader(thumbLoaderID, queryBundle, this);
+                    Bundle queryBundle = new Bundle();
+                    queryBundle.putString(SEARCH_URL, urlJSON);
+
+                    LoaderManager loaderManager = getSupportLoaderManager();
+
+                    Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
+
+                    if (thumbsLoader == null) {
+                        Log.v("RAG", "loader inicializado");
+                        loaderManager.initLoader(thumbLoaderID, queryBundle, this);
+                    } else {
+
+
+                        Log.v("RAG", "loader re-inicializado");
+                        loaderManager.restartLoader(thumbLoaderID, queryBundle, this);
+                    }
                 }
+
+
 
             }else{
 
                 Toast toast = Toast.makeText(getApplicationContext(), R.string.NOINTERNET,
                         Toast.LENGTH_SHORT);
                 toast.show();
-
             }
 
         } catch (Exception e) {
@@ -149,7 +164,7 @@ public class MainActivity extends AppCompatActivity
 
                 try {
 
-                    Log.v("RAG","loadInBackground()");
+                    Log.v("RAG", "loadInBackground()");
                     String searchQueryUrlString = args.getString(SEARCH_URL);
 
                     URL urlSearch = new URL(searchQueryUrlString);
@@ -161,8 +176,7 @@ public class MainActivity extends AppCompatActivity
 
                     listMovies.clear();
 
-                    for(int i = 0;i<array.length();i++)
-                    {
+                    for (int i = 0; i < array.length(); i++) {
                         JSONObject o = array.getJSONObject(i);
 
                         //get base poster path
@@ -176,13 +190,19 @@ public class MainActivity extends AppCompatActivity
                         String rating = o.getString("vote_average");
                         String id = o.getString("id");
 
+                        Bitmap poster = loadImageFromURL(poster_path);
+                        String pathToPosterFile = saveBitmap(poster, id + ".png");
+
+
                         Movies item = new Movies(titulo,
                                 poster_path,
                                 duracao,
                                 ano,
                                 sinopse,
                                 rating,
-                                id);
+                                id,
+                                pathToPosterFile
+                        );
 
                         listMovies.add(item);
 
@@ -191,11 +211,14 @@ public class MainActivity extends AppCompatActivity
 
                     }
 
-                } catch (IOException e1) {
+                } catch (IOException e1)
+                {
                     e1.printStackTrace();
-
-                } catch (JSONException e) {
+                } catch (JSONException e)
+                {
                     e.printStackTrace();
+                } catch (Exception e2) {
+                    e2.printStackTrace();
                 }
 
                 return null;
@@ -204,7 +227,6 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void deliverResult(String githubJson) {
 
-                Log.v("RAG", "deliveryResult:"+githubJson);
                 //Toast toast = Toast.makeText(getApplicationContext(), "deliverResult",
                 //        Toast.LENGTH_SHORT);
                 //toast.show();
@@ -221,8 +243,9 @@ public class MainActivity extends AppCompatActivity
 
         //Log.v("RAG", "e");
         recMainActivity.setAdapter(recyclerAdapter);
+        Log.v("RAG","listMovies:"+listMovies.size());
 
-        Toast toast = Toast.makeText(getApplicationContext(), "finish loading",
+        Toast toast = Toast.makeText(getApplicationContext(), "finish loading movies:"+ loader.getId(),
                 Toast.LENGTH_SHORT);
         toast.show();
 
@@ -230,7 +253,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onLoaderReset(Loader<String> loader) {
-        Toast toast = Toast.makeText(getApplicationContext(), "reset loading",
+        Toast toast = Toast.makeText(getApplicationContext(), "loader reseted",
                 Toast.LENGTH_SHORT);
         toast.show();
 
@@ -241,14 +264,14 @@ public class MainActivity extends AppCompatActivity
     //
 
 
-    public class loadDataInBackground extends AsyncTask<URL, Void, String> {
+    public class loadDataInBackground extends  AsyncTask<URL, Void, String> {
 
         @Override
         protected void onPostExecute(String s) {
 
             recMainActivity.setAdapter(recyclerAdapter);
             //recyclerAdapter.notifyDataStateChanged();
-            //Log.v("RAG",s.toString());
+            Log.v("RAG","onPostExecute"+s.toString());
         }
 
         @Override
@@ -293,9 +316,12 @@ public class MainActivity extends AppCompatActivity
                             ano,
                             sinopse,
                             rating,
-                            id);
+                            id,"");
 
                     listMovies.add(item);
+
+                    //long numID = addNewMovies(item);
+                    //Log.v("RAG","numID:"+numID);
 
                     //Log.v("RAG", "path:"+poster_path);
                     //Log.v("RAG", "id:"+id);
@@ -379,6 +405,64 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+
+
+    public Bitmap loadImageFromURL(String src){
+
+        String fileName = String.format("%d.png", System.currentTimeMillis());
+        Bitmap myBitmap;
+
+        try {
+
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+
+            myBitmap = BitmapFactory.decodeStream(input);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return myBitmap;
+
+    }
+
+
+    public String saveBitmap(Bitmap bm, String name) throws Exception {
+
+        String tempFilePath = Environment.getExternalStorageDirectory() + "/moviedb/" +  name;
+        //Log.v("RAG", "image path on phone:"+tempFilePath);
+
+        File tempFile = new File(tempFilePath);
+        if (!tempFile.exists()) {
+            if (!tempFile.getParentFile().exists()) {
+                tempFile.getParentFile().mkdirs();
+            }
+        }
+
+        tempFile.delete();
+        tempFile.createNewFile();
+
+        int quality = 100;
+        FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+
+        BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream);
+        bm.compress(Bitmap.CompressFormat.JPEG, quality, bos);
+
+        bos.flush();
+        bos.close();
+
+        bm.recycle();
+
+        return tempFilePath;
+    }
+
+
+
     //
     // DB functions
     //
@@ -395,14 +479,13 @@ public class MainActivity extends AppCompatActivity
             cv.put(COLUMN_SINOPSE, movie.getSinopse());
             cv.put(COLUMN_RATING, movie.getRating());
             //cv.put(COLUMN_FAVORITOS, movie.getTitulo());
-            cv.put(COLUMN_IMAGEPATH, movie.getUrlCapa());
+            cv.put(COLUMN_IMAGEPATH, movie.getPathtofile());
 
 
             mDb.beginTransaction();
-
             idMovieRecord =  mDb.insert(TABLE_NAME, null, cv);
-
             mDb.setTransactionSuccessful();
+
         }
         catch (SQLException e) {
             Log.v("RAG",e.toString());
@@ -419,5 +502,35 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    private boolean hasDbRecords(){
+
+        Boolean rowExists = false;
+
+        try {
+
+            Cursor mCursor = mDb.query(TABLE_NAME,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                COLUMN_TITULO
+                    );
+
+
+            if (mCursor.moveToFirst())
+            {
+                rowExists = true;
+            }
+
+        }
+        catch (SQLException e) {
+            Log.v("RAG",e.toString());
+                //too bad :(
+        }
+
+        return rowExists;
+
+    }
 
 }

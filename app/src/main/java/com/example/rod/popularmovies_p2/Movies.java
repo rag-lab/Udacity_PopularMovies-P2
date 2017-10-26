@@ -13,9 +13,11 @@ public class Movies {
     private String ano;
     private String rating;
     private String id;
+    private String pathtofile;
 
 
-    public Movies(String titulo, String urlCapa, String duracao, String ano, String sinopse, String rating, String id) {
+
+    public Movies(String titulo, String urlCapa, String duracao, String ano, String sinopse, String rating, String id, String pathtofile) {
         this.titulo = titulo;
         this.urlCapa = urlCapa;
         this.duracao = duracao;
@@ -23,7 +25,17 @@ public class Movies {
         this.sinopse = sinopse;
         this.rating = rating;
         this.id = id;
+        this.pathtofile = pathtofile;
+    }
 
+
+
+    public String getPathtofile() {
+        return pathtofile;
+    }
+
+    public void setPathtofile(String pathtofile) {
+        this.pathtofile = pathtofile;
     }
 
 

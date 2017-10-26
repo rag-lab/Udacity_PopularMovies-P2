@@ -1,15 +1,15 @@
 package com.example.rod.popularmovies_p2.data;
 
-/**
- * Created by rodrigo.augusto on 24/10/2017.
- */
-
 import android.provider.BaseColumns;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+/**
+ * Created by rodrigo on 10/20/2017.
+ */
 
 public class MovieContract {
+
 
     public static final class MovieListEntry implements BaseColumns {
 
@@ -24,7 +24,9 @@ public class MovieContract {
         public static final String COLUMN_FAVORITOS = "favoritos";
         public static final String COLUMN_IMAGEPATH = "image";
 
+
     }
+
 
 
 }

@@ -33,14 +33,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
     List<Movies> listaFilmes;
     private String imagePathOnPhone="";
     private Context context;
-    private int mCount;
-
 
 
     public RecyclerAdapter(List<Movies> listaFilmes, Context context){
         this.context = context;
         this.listaFilmes = listaFilmes;
-        //this.mCount = count;
     }
 
 
@@ -57,6 +54,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
             capaFilme = (ImageView) itemView.findViewById(R.id.imageView1);
         }
 
+
     }
 
 
@@ -72,11 +70,10 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
     }
 
 
-
     public String saveBitmap(Bitmap bm, String name) throws Exception {
 
         String tempFilePath = Environment.getExternalStorageDirectory() + "/moviedb/" +  name;
-        Log.v("RAG", "image path on phone:"+tempFilePath);
+        //Log.v("RAG", "image path on phone:"+tempFilePath);
 
         File tempFile = new File(tempFilePath);
         if (!tempFile.exists()) {
@@ -96,6 +93,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
 
         bos.flush();
         bos.close();
+
         bm.recycle();
 
         return tempFilePath;
@@ -123,21 +121,19 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
 
 
     @Override
-    public void onBindViewHolder(final RecyclerAdapter.myViewHolder holder, int position) {
+    public void onBindViewHolder( final RecyclerAdapter.myViewHolder holder, int position) {
 
         Movies listItem = listaFilmes.get(position);
 
         final String r_titulo = listItem.getTitulo();
         final String r_thumbPath = listItem.getUrlCapa();
+        String r_imagePathOnPhone = "";
         final String r_ano = listItem.getAno();
         final String r_duracao= "200min"; //not used;
         final String r_rating = listItem.getRating();
         final String r_sinopse = listItem.getSinopse();
         final String r_movieID = listItem.getId();
 
-        //Picasso.with(context)
-        //       .load(listItem.getUrlCapa())
-        //       .into(holder.capaFilme);
 
         Picasso.with(context)
                 .load(r_thumbPath)
@@ -149,24 +145,29 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
 
                         try{
 
-                            //Bitmap bmPosterImage = loadBitmapFromView(holder.capaFilme);
-                            //String fileName = String.format("%d.png", System.currentTimeMillis());
-                            //imagePathOnPhone = saveBitmap(bmPosterImage,fileName);
-                            //Log.v("RAG", "saving image:"+imagePathOnPhone);
-                            //Log.v("RAG", "path :"+aa);
 
 
                         }catch (Exception ex){
                             Log.v("RAG", "fail saving image:"+ex.toString());
                         }
+
                     }
 
                     @Override
                     public void onError() {
-                        Toast.makeText(context, "An error occurred", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "error loading picasso image", Toast.LENGTH_SHORT).show();
                     }
-
                 });
+
+
+
+        //Picasso.with(context)
+          //      .load(listItem.getUrlCapa())
+        //        .into(holder.capaFilme)
+
+        //Bitmap bmPosterImage = loadBitmapFromView(holder.capaFilme);
+        //String fileName = "gggj";//String.format("%d.jpg", System.currentTimeMillis());
+
 
 
         holder.capaFilme.setOnClickListener(new View.OnClickListener() {
@@ -188,11 +189,12 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
 
             }
         });
+
+
     }
 
     @Override
     public int getItemCount() {
-
         int a ;
 
         if(listaFilmes != null && !listaFilmes.isEmpty()) {
@@ -202,7 +204,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
         {
             a = 0;
         }
-
         return a;
     }
 
