@@ -39,6 +39,7 @@ public class childActivity extends AppCompatActivity
     TextView sinopse;
     TextView rating;
     ImageView imgView;
+    TextView reviewLabel;
 
     //http://api.themoviedb.org/3/movie/293660/reviews?api_key=8481813f6a52db086ab5d607c8c94667
     //http://api.themoviedb.org/3/movie/293660/videos?api_key=8481813f6a52db086ab5d607c8c94667
@@ -49,18 +50,20 @@ public class childActivity extends AppCompatActivity
     //TextView authorReview;
 
     /* A constant to save and restore the URL do review e do trailer */
-    private static final String REVIEW_URL = "";
-    private static final String TRAILER_URL = "";
+    private static final String REVIEW_URL = "REVIEW_URL";
+    private static final String TRAILER_URL = "TRAILER_URL";
 
     private RecyclerView reviewRecyclerView;
     private ReviewAdapter reviewRecyclerAdapter;
-
     private List<Review> listReviews;
+
+    private RecyclerView trailerRecyclerView;
+    private TrailerAdapter trailerRecyclerAdapter;
     private List<Trailer> listTrailer;
 
     private String urlJSON="";
     private String movieID="";
-    private String pathReview="";
+    private String movieTrailer="";
     private String movieReview="";
 
     private static final int reviewLoaderID= 23;
@@ -79,6 +82,8 @@ public class childActivity extends AppCompatActivity
         sinopse = (TextView) findViewById(R.id.sinopse);
         rating = (TextView) findViewById(R.id.rating);
 
+        reviewLabel = (TextView) findViewById(R.id.labelReview);
+
         Intent intent2 = getIntent();
 
 
@@ -94,14 +99,14 @@ public class childActivity extends AppCompatActivity
         if(intent2.hasExtra("movieID")){
 
             movieID = intent2.getStringExtra("movieID");
-
-            pathReview = String.format( getString(R.string.base_url_trailer), movieID, getString(R.string.APIKEY));
+            movieTrailer = String.format( getString(R.string.base_url_trailer), movieID, getString(R.string.APIKEY));
             movieReview = String.format( getString(R.string.base_url_review), movieID, getString(R.string.APIKEY));
-            //Log.v("RAG","pathReview:"+pathReview);
-            //Log.v("RAG","movieReview:"+movieReview);
+            //Log.v("RAG","movieTrailer:"+movieTrailer);
+            Log.v("RAG","movieReview:"+movieReview);
+
 
         }else{
-            Log.v("RAG","no movie id");
+            Log.v("RAG","no movie id found");
         }
 
 
@@ -144,19 +149,39 @@ public class childActivity extends AppCompatActivity
             sinopse.setText("");
         }
 
-
+        //review
         //create/configure recyclerview
-        reviewRecyclerView = (RecyclerView) findViewById(R.id.recyclerviewReview);
+        reviewRecyclerView = (RecyclerView) findViewById(R.id.recyclerViewReview);
         reviewRecyclerView.setHasFixedSize(true);
 
+        //set layout
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         reviewRecyclerView.setLayoutManager(linearLayoutManager);
 
         listReviews = new ArrayList<>();
 
+        //recycleadapter review
         reviewRecyclerAdapter = new ReviewAdapter(listReviews, getBaseContext());
-        reviewRecyclerView.setAdapter(reviewRecyclerAdapter);
+        //reviewRecyclerView.setAdapter(reviewRecyclerAdapter);
+        //----fim review-----
 
+
+        //trailer
+
+        //create/configure recyclerview
+        trailerRecyclerView = (RecyclerView) findViewById(R.id.recyclerviewTrailer);
+        trailerRecyclerView.setHasFixedSize(true);
+
+        //set layout
+        LinearLayoutManager linearLayoutManager2 = new LinearLayoutManager(this);
+        trailerRecyclerView.setLayoutManager(linearLayoutManager2);
+
+        listTrailer = new ArrayList<>();
+
+        //recycleadapter review
+        trailerRecyclerAdapter = new TrailerAdapter(listTrailer, getBaseContext());
+        //trailerRecyclerView.setAdapter(reviewRecyclerAdapter);
+        //----fim review-----
 
 
         try {
@@ -164,19 +189,30 @@ public class childActivity extends AppCompatActivity
             if(isOnline()){
 
                 Bundle queryBundle = new Bundle();
-                queryBundle.putString(REVIEW_URL, movieReview.toString());
+                queryBundle.putString("REVIEW_URL", movieReview.toString());
+                queryBundle.putString("TRAILER_URL", movieTrailer.toString());
 
                 LoaderManager loaderManager = getSupportLoaderManager();
-
                 Loader<String> reviewLoader = loaderManager.getLoader(reviewLoaderID);
+                Loader<String> trailerLoader = loaderManager.getLoader(trailerLoaderID);
+
 
                 // COMPLETED (23) If the Loader was null, initialize it. Else, restart it.
                 if (reviewLoader == null) {
                     Log.v("RAG", "loader review inicializado");
                     loaderManager.initLoader(reviewLoaderID, queryBundle, this);
                 } else {
-                    Log.v("RAG", "loader review re-inicializado");
+                    Log.v("RAG", "loader review restarted");
                     loaderManager.restartLoader(reviewLoaderID, queryBundle, this);
+                }
+
+
+                if (trailerLoader == null) {
+                    Log.v("RAG", "loader trailer inicializado");
+                    loaderManager.initLoader(trailerLoaderID, queryBundle, this);
+                } else {
+                    Log.v("RAG", "loader trailer restarted");
+                    loaderManager.restartLoader(trailerLoaderID, queryBundle, this);
                 }
 
 
@@ -191,7 +227,6 @@ public class childActivity extends AppCompatActivity
             e.printStackTrace();
         }
 
-
     }
 
 
@@ -201,113 +236,259 @@ public class childActivity extends AppCompatActivity
     @Override
     public Loader<String> onCreateLoader(int id, final Bundle args) {
 
-        return new AsyncTaskLoader<String>(this){
+        Log.v("RAG","onCreateLoader:"+ String.valueOf(id));
 
-            String jsonReviewResult;
+        switch(id)
+        {
 
-            @Override
-            protected void onStartLoading() {
+            case 23:
+                Log.v("RAG", String.valueOf(id));
+                return new AsyncTaskLoader<String>(this) {
 
-                /* If no arguments were passed, we don't have a query to perform. Simply return. */
-                if (args == null) {
-                    Toast toast = Toast.makeText(getApplicationContext(), "no argumento to load review",
-                            Toast.LENGTH_SHORT);
-                    toast.show();
-                    return;
-                }
+                    String jsonReviewResult;
 
-                //pega do cache ou carrega
-                if (jsonReviewResult != null) {
-                    Log.v("RAG","onStartLoading review() "+ jsonReviewResult);
-                    deliverResult(jsonReviewResult);
-                } else {
+                    @Override
+                    protected void onStartLoading() {
 
-                    Toast toast = Toast.makeText(getApplicationContext(), "start loading, force load2()",
-                            Toast.LENGTH_SHORT);
-                    toast.show();
-                    Log.v("RAG","forceLoad2()");
+                        /* If no arguments were passed, we don't have a query to perform. Simply return. */
+                        if (args == null) {
+                            Toast toast = Toast.makeText(getApplicationContext(), "no argumento to load review",
+                                    Toast.LENGTH_SHORT);
+                            toast.show();
+                            return;
 
-                    this.forceLoad();
-                }
+                        }else {
 
-            }
+                            //pega do cache ou carrega
+                            String aa = (jsonReviewResult != null) ? "pega cache" : "pega internet";
 
-            @Override
-            public String loadInBackground() {
+                            Log.v("RAG", "onStartLoading() " + aa + " / " + jsonReviewResult);
 
+                            if (jsonReviewResult != null) {
+                                deliverResult(jsonReviewResult);
+                            } else {
 
-                try {
+                                //Toast toast = Toast.makeText(getApplicationContext(), "start loading review, force load()",Toast.LENGTH_SHORT);
+                                //toast.show();
+                                //Log.v("RAG","forceLoad review()");
 
-                    Log.v("RAG","loadInBackground()2");
-                    String searchQueryUrlString = args.getString(REVIEW_URL);
-
-                    URL urlSearch = new URL(searchQueryUrlString);
-                    String strJsonResult="";
-
-                    strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
-
-                    JSONObject jsonObject = new JSONObject(strJsonResult);
-                    JSONArray array = jsonObject.getJSONArray("results");
-
-                    listReviews.clear();
-
-                    for(int i = 0;i<array.length();i++)
-                    {
-                        JSONObject o = array.getJSONObject(i);
-                        String id = o.getString("id");
-                        String author = o.getString("author");
-                        String content = o.getString("content");
-                        String link = o.getString("url");
-
-                        Review item = new Review(id, author, content, link);
-                        listReviews.add(item);
-                        //Log.v("RAG", "author:"+author);
-                        //Log.v("RAG", "content:"+content);
+                                this.forceLoad();
+                            }
+                        }
                     }
 
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+                    @Override
+                    public String loadInBackground() {
 
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
 
+                        try {
+
+                            //Log.v("RAG","loadInBackground review():"+REVIEW_URL);
+                            String searchQueryUrlString = args.getString(REVIEW_URL);
+
+                            URL urlSearch = new URL(searchQueryUrlString);
+                            String strJsonResult = "";
+
+                            strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
+                            jsonReviewResult = strJsonResult;
+
+                            JSONObject jsonObject = new JSONObject(strJsonResult);
+                            JSONArray array = jsonObject.getJSONArray("results");
+
+                            //Log.v("RAG",strJsonResult);
+
+                            listReviews.clear();
+                            if (array.length() > 0) {
+
+                                for (int i = 0; i < array.length(); i++) {
+                                    JSONObject o1 = array.getJSONObject(i);
+                                    String id = o1.getString("id");
+                                    String author = o1.getString("author");
+                                    String content = o1.getString("content");
+                                    String link = o1.getString("url");
+
+                                    Review item = new Review(id, author, content, link);
+                                    if(listReviews.size() <4) listReviews.add(item);
+                                    //Log.v("RAG", "author:"+author);
+                                    //Log.v("RAG", "content:"+content);
+                                }
+
+                                if (array.length() == 1) {
+                                    reviewLabel.setText("Review:");
+                                }
+
+                            } else {
+                                reviewLabel.setText("No reviews yet");
+                            }
+
+                            Log.v("RAG", "listReviews size:" + listReviews.size());
+
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        return jsonReviewResult;
+                    }
+
+                    @Override
+                    public void deliverResult(String githubJson) {
+
+                        //Log.v("RAG", "deliveryResult loader review:"+githubJson);
+                        //Toast toast = Toast.makeText(getApplicationContext(), "deliverResult",
+                        //        Toast.LENGTH_SHORT);
+                        //toast.show();
+
+                        jsonReviewResult = githubJson;
+                        super.deliverResult(githubJson);
+                    }
+
+                };
+
+
+            case 24:
+
+                return new AsyncTaskLoader<String>(this) {
+                    String jsonTrailerResult;
+
+                    @Override
+                    protected void onStartLoading() {
+
+                        /* If no arguments were passed, we don't have a query to perform. Simply return. */
+                        if (args == null) {
+                            Toast toast = Toast.makeText(getApplicationContext(), "no argumento to load trailer",
+                                    Toast.LENGTH_SHORT);
+                            toast.show();
+                            return;
+                        }
+
+                        //pega do cache ou carrega
+                        String aa = (jsonTrailerResult != null) ? "pega cache" : "pega internet";
+
+                        Log.v("RAG", "onStartLoading trailer() " + aa + " / " + jsonTrailerResult);
+
+                        if (jsonTrailerResult != null) {
+                            deliverResult(jsonTrailerResult);
+                        } else {
+
+                            Toast toast = Toast.makeText(getApplicationContext(), "start loading review, force load()",
+                                    Toast.LENGTH_SHORT);
+                            toast.show();
+                            //Log.v("RAG","forceLoad review()");
+                            this.forceLoad();
+                        }
+
+                    }
+
+                    @Override
+                    public String loadInBackground() {
+
+
+                        try {
+
+                            Log.v("RAG","loadInBackground trailer():"+args.getString(TRAILER_URL));
+                            String searchQueryUrlString = args.getString(TRAILER_URL);
+
+                            URL urlSearch = new URL(searchQueryUrlString);
+                            String strJsonResult = "";
+
+                            strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
+                            jsonTrailerResult = strJsonResult;
+
+                            JSONObject jsonObject = new JSONObject(strJsonResult);
+                            JSONArray array = jsonObject.getJSONArray("results");
+
+                            Log.v("RAG","trailer length:"+array.length());
+
+                            listTrailer.clear();
+                            if (array.length() > 0) {
+
+                                for (int i = 0; i < array.length(); i++) {
+                                    JSONObject o1 = array.getJSONObject(i);
+                                    String id = o1.getString("id");
+                                    String name = o1.getString("name");
+                                    String key = o1.getString("key");
+
+                                    Trailer item = new Trailer(id, name, key);
+
+                                    if (listTrailer.size()<2) listTrailer.add(item);
+
+                                    Log.v("RAG", "name:"+name);
+                                    //Log.v("RAG", "content:"+content);
+                                }
+
+                                if (array.length() == 1) {
+                                    //reviewLabel.setText("Review:");
+                                }
+
+                            } else {
+                                //reviewLabel.setText("No reviews yet");
+                            }
+
+                            Log.v("RAG", "listTrailer size:" + listTrailer.size());
+
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        return jsonTrailerResult;
+                    }
+
+                    @Override
+                    public void deliverResult(String githubJson) {
+
+                        //Log.v("RAG", "deliveryResult loader review:"+githubJson);
+                        //Toast toast = Toast.makeText(getApplicationContext(), "deliverResult",
+                        //        Toast.LENGTH_SHORT);
+                        //toast.show();
+
+                        jsonTrailerResult = githubJson;
+                        super.deliverResult(githubJson);
+                    }
+
+                };
+
+            default:
                 return null;
-            }
 
-            @Override
-            public void deliverResult(String githubJson) {
+        }
 
-                Log.v("RAG", "deliveryResult2:"+githubJson);
-                //Toast toast = Toast.makeText(getApplicationContext(), "deliverResult",
-                //        Toast.LENGTH_SHORT);
-                //toast.show();
+    };
 
-                jsonReviewResult = githubJson;
-                super.deliverResult(githubJson);
-            }
 
-        };
+    @Override
+    public void onLoadFinished(Loader<String> loader, String data) {
+
+        //Log.v("RAG", "review onLoadFinished:"+loader.getId());
+        //Log.v("RAG", "data:"+data);
+
+        switch(loader.getId())
+        {
+
+            case 23:
+                reviewRecyclerView.setAdapter(reviewRecyclerAdapter);
+
+            case 24:
+                trailerRecyclerView.setAdapter(trailerRecyclerAdapter);
+
+            default:
+
+
+        }
+
     }
 
     @Override
-    public void onLoadFinished(android.support.v4.content.Loader<String> loader, String data) {
+    public void onLoaderReset(Loader<String> loader) {
 
-        //Log.v("RAG", "e");
-        //recMainActivity.setAdapter(recyclerAdapter);
+        //Toast toast = Toast.makeText(getApplicationContext(), "onLoaderReset() review",Toast.LENGTH_SHORT);
+        //toast.show();
 
-        Toast toast = Toast.makeText(getApplicationContext(), "onLoadFinished2",
-                Toast.LENGTH_SHORT);
-        toast.show();
-
-    }
-
-    @Override
-    public void onLoaderReset(android.support.v4.content.Loader<String> loader) {
-
-        Toast toast = Toast.makeText(getApplicationContext(), "onLoaderReset()",
-                Toast.LENGTH_SHORT);
-        toast.show();
     }
 
     //

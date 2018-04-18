@@ -74,19 +74,23 @@ public class MainActivity extends AppCompatActivity
         recMainActivity.setLayoutManager(gridLayoutManager);
 
         //Cursor cursor = getAllMovies();
+        //Log.v("RAG", "listMovies size():"+listMovies.size());
+
         recyclerAdapter = new RecyclerAdapter(listMovies, getBaseContext());
 
         recMainActivity.setAdapter(recyclerAdapter);
         urlJSON = String.format( getString(R.string.base_url_popular),getString(R.string.APIKEY));
+        Log.v("RAG", urlJSON);
 
         try {
 
             if(isOnline()){
 
-                dbHelper = new MovieDbHelper(this);
-                mDb = dbHelper.getWritableDatabase();
+                //dbHelper = new MovieDbHelper(this);
+                //mDb = dbHelper.getWritableDatabase();
 
-                if(hasDbRecords()){
+                //if(hasDbRecords()){
+                 if(false){
                     Log.v("RAG", "db has records");
 
                 }else{
@@ -95,21 +99,17 @@ public class MainActivity extends AppCompatActivity
                     queryBundle.putString(SEARCH_URL, urlJSON);
 
                     LoaderManager loaderManager = getSupportLoaderManager();
-
                     Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
 
                     if (thumbsLoader == null) {
-                        Log.v("RAG", "loader inicializado");
+                        //Log.v("RAG", "loader inicializado");
                         loaderManager.initLoader(thumbLoaderID, queryBundle, this);
                     } else {
 
-
-                        Log.v("RAG", "loader re-inicializado");
+                        //Log.v("RAG", "loader re-inicializado");
                         loaderManager.restartLoader(thumbLoaderID, queryBundle, this);
                     }
                 }
-
-
 
             }else{
 
@@ -145,15 +145,11 @@ public class MainActivity extends AppCompatActivity
 
                 //pega do cache ou carrega
                 if (mResult != null) {
-                    Log.v("RAG","onStartLoading() "+ mResult);
+                    //Log.v("RAG","onStartLoading from cache() "+ mResult);
                     deliverResult(mResult);
                 } else {
 
-                    Toast toast = Toast.makeText(getApplicationContext(), "start loading, force load()",
-                            Toast.LENGTH_SHORT);
-                    toast.show();
-                    Log.v("RAG","forceLoad()");
-
+                    //Log.v("RAG","forceLoad()");
                     this.forceLoad();
                 }
 
@@ -164,19 +160,21 @@ public class MainActivity extends AppCompatActivity
 
                 try {
 
-                    Log.v("RAG", "loadInBackground()");
+                    //Log.v("RAG", "loadInBackground():" + isOnline());
+
                     String searchQueryUrlString = args.getString(SEARCH_URL);
 
                     URL urlSearch = new URL(searchQueryUrlString);
                     String strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
+                    mResult = strJsonResult;
 
                     JSONObject jsonObject = new JSONObject(strJsonResult);
                     JSONArray array = jsonObject.getJSONArray("results");
 
-
                     listMovies.clear();
 
                     for (int i = 0; i < array.length(); i++) {
+
                         JSONObject o = array.getJSONObject(i);
 
                         //get base poster path
@@ -190,8 +188,8 @@ public class MainActivity extends AppCompatActivity
                         String rating = o.getString("vote_average");
                         String id = o.getString("id");
 
-                        Bitmap poster = loadImageFromURL(poster_path);
-                        String pathToPosterFile = saveBitmap(poster, id + ".png");
+                        //Bitmap poster = loadImageFromURL(poster_path);
+                        //String pathToPosterFile = saveBitmap(poster, id + ".png");
 
 
                         Movies item = new Movies(titulo,
@@ -201,62 +199,58 @@ public class MainActivity extends AppCompatActivity
                                 sinopse,
                                 rating,
                                 id,
-                                pathToPosterFile
-                        );
+                                "pathToPosterFile");
 
                         listMovies.add(item);
 
-                        long numID = addNewMovies(item);
-                        Log.v("RAG","numID:"+numID);
+                        //long numID = addNewMovies(item);
+                        //Log.v("RAG","pathToPosterFile:"+pathToPosterFile);
 
                     }
 
-                } catch (IOException e1)
+                }
+                catch (IOException e1)
                 {
                     e1.printStackTrace();
-                } catch (JSONException e)
+                }
+                catch (JSONException e)
                 {
                     e.printStackTrace();
-                } catch (Exception e2) {
+                }
+                catch (Exception e2) {
                     e2.printStackTrace();
                 }
 
-                return null;
+                return mResult;
             }
 
             @Override
             public void deliverResult(String githubJson) {
 
-                //Toast toast = Toast.makeText(getApplicationContext(), "deliverResult",
-                //        Toast.LENGTH_SHORT);
-                //toast.show();
-
+                //Log.v("RAG","deliverResult:"+githubJson);
                 mResult = githubJson;
                 super.deliverResult(githubJson);
             }
 
         };
+
     }
 
     @Override
     public void onLoadFinished(Loader<String> loader, String data) {
 
-        //Log.v("RAG", "e");
         recMainActivity.setAdapter(recyclerAdapter);
-        Log.v("RAG","listMovies:"+listMovies.size());
-
-        Toast toast = Toast.makeText(getApplicationContext(), "finish loading movies:"+ loader.getId(),
-                Toast.LENGTH_SHORT);
-        toast.show();
-
+        Log.v("RAG","onLoadFinished listMovies:"+listMovies.size());
+        //Toast toast = Toast.makeText(getApplicationContext(), "finish loading movies:"+ loader.getId(),Toast.LENGTH_SHORT);
+        //toast.show();
     }
 
     @Override
     public void onLoaderReset(Loader<String> loader) {
-        Toast toast = Toast.makeText(getApplicationContext(), "loader reseted",
-                Toast.LENGTH_SHORT);
-        toast.show();
 
+        Log.v("RAG", "onLoaderReset");
+        //Toast toast = Toast.makeText(getApplicationContext(), "loader reseted",Toast.LENGTH_SHORT);
+        //toast.show();
     }
 
     //
@@ -264,6 +258,7 @@ public class MainActivity extends AppCompatActivity
     //
 
 
+    //not in use...
     public class loadDataInBackground extends  AsyncTask<URL, Void, String> {
 
         @Override
@@ -283,6 +278,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         protected String doInBackground(URL... params) {
 
+            Log.v("RAG","doInBackground");
             URL urlSearch = params[0];
             String aa="";
 
@@ -411,6 +407,7 @@ public class MainActivity extends AppCompatActivity
 
         String fileName = String.format("%d.png", System.currentTimeMillis());
         Bitmap myBitmap;
+        //Log.v("RAG","loadImageFromURL:"+src.toString());
 
         try {
 
@@ -431,42 +428,48 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-
     public String saveBitmap(Bitmap bm, String name) throws Exception {
 
         String tempFilePath = Environment.getExternalStorageDirectory() + "/moviedb/" +  name;
-        //Log.v("RAG", "image path on phone:"+tempFilePath);
+        Log.v("RAG", "saveBitmap(name):"+tempFilePath);
 
         File tempFile = new File(tempFilePath);
+
+        //file not exist
         if (!tempFile.exists()) {
+
+            //create dir if not exists
             if (!tempFile.getParentFile().exists()) {
                 tempFile.getParentFile().mkdirs();
             }
+
+            tempFile.delete();
+            tempFile.createNewFile();
+
+            int quality = 100;
+            FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+
+            BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream);
+            bm.compress(Bitmap.CompressFormat.JPEG, quality, bos);
+
+            bos.flush();
+            bos.close();
+
+            bm.recycle();
+
+        }else{
+            Log.v("RAG", "  file already on phone:");
         }
-
-        tempFile.delete();
-        tempFile.createNewFile();
-
-        int quality = 100;
-        FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
-
-        BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream);
-        bm.compress(Bitmap.CompressFormat.JPEG, quality, bos);
-
-        bos.flush();
-        bos.close();
-
-        bm.recycle();
 
         return tempFilePath;
     }
-
 
 
     //
     // DB functions
     //
 
+    //add a new movie to the db
     private long addNewMovies(Movies movie){
 
         long idMovieRecord = 0;
@@ -502,6 +505,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    //query for empty db
     private boolean hasDbRecords(){
 
         Boolean rowExists = false;
@@ -525,7 +529,7 @@ public class MainActivity extends AppCompatActivity
 
         }
         catch (SQLException e) {
-            Log.v("RAG",e.toString());
+            Log.v("RAG","hasDbRecords:"+e.toString());
                 //too bad :(
         }
 

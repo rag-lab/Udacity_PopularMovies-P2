@@ -3,6 +3,7 @@ package com.example.rod.popularmovies_p2;
 import android.content.Context;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -79,11 +80,11 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.myViewHold
         final String rev_comentario = listItem.getContent();
         final String rev_url = listItem.getUrl();
 
-        //holderReview.comentario.setText("rev_comentario");
-        //holderReview.nome.setText("rev_author");
-
         holderReview.comentario.setText(rev_comentario);
         holderReview.nome.setText(rev_author);
+
+        //Log.v("RAG", "review nome:"+rev_author);
+        //Log.v("RAG", "review texto:"+rev_comentario);
 
 
     }
