@@ -77,24 +77,43 @@
             android:paddingLeft="@dimen/paddingLeft10"
             android:text="Sinopste"/>
 
+        <!-- label trailer-->
+        <TextView
+            android:id="@+id/labelTrailer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/sinopse"
+            android:layout_marginTop="@dimen/margin15"
+            android:paddingLeft="@dimen/paddingLeft10"
+            android:paddingRight="@dimen/paddingRight10"
+            android:text="Trailer:" />
+
+        <!-- recyclerview trailer-->
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerviewTrailer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="vertical"
+            android:layout_below="@id/labelTrailer"/>
+
+        <!-- label review -->
         <TextView
             android:id="@+id/labelReview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin15"
-            android:layout_below="@+id/sinopse"
-            android:paddingRight="@dimen/paddingRight10"
             android:paddingLeft="@dimen/paddingLeft10"
-            android:text="Review:"/>
+            android:paddingRight="@dimen/paddingRight10"
+            android:layout_below="@id/recyclerviewTrailer"
+            android:text="Reviews:" />
 
+        <!-- recyclerview review -->
         <android.support.v7.widget.RecyclerView
-            android:id="@+id/recyclerviewReview"
+            android:id="@+id/recyclerViewReview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scrollbars="vertical"
             android:layout_below="@id/labelReview"/>
-
-
 
     </RelativeLayout>
 

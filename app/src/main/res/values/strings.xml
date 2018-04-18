@@ -1,25 +1,22 @@
 <resources>
+
     <string name="app_name">PopularMovies-p2</string>
 
     <string name="base_url_poster">http://image.tmdb.org/t/p/w185//</string>
     <string name="base_url_popular">http://api.themoviedb.org/3/movie/popular?api_key=%1$s</string>
     <string name="base_url_toprated">http://api.themoviedb.org/3/movie/top_rated?api_key=%1$s</string>
-
     <string name="base_url_review">http://api.themoviedb.org/3/movie/%1$s/reviews?api_key=%2$s</string>
     <string name="base_url_trailer">http://api.themoviedb.org/3/movie/%1$s/videos?api_key=%2$s</string>
+    <string name="base_url_youtube">https://www.youtube.com/watch?v=</string>
 
     <string name="APIKEY">8481813f6a52db086ab5d607c8c94667</string>
     <string name="tag">RAG</string>
     <string name="NOINTERNET">No internet connection, please check.</string>
-
     <string name="POSTERIMAGE">Poster Image</string>
 
     <string name="MENUITEM1">Most popular</string>
     <string name="MENUITEM2">Highest rated</string>
 
     <string name="action_settings">Settings</string>
-
-
-
 
 </resources>
