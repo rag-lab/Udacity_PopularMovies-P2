@@ -1,8 +1,10 @@
 package com.example.rod.popularmovies_p2;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -14,9 +16,11 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.example.rod.popularmovies_p2.data.MovieContract;
 import com.squareup.picasso.Picasso;
@@ -24,11 +28,19 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.COLUMN_ANO;
+import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.COLUMN_DURACAO;
+import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.COLUMN_IDMOVIE;
+import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.COLUMN_IMAGEPATH;
+import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.COLUMN_RATING;
+import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.COLUMN_SINOPSE;
+import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.COLUMN_TITULO;
+import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.TABLE_NAME;
 
 public class childActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<String> {
@@ -61,6 +73,12 @@ public class childActivity extends AppCompatActivity
     private TrailerAdapter trailerRecyclerAdapter;
     private List<Trailer> listTrailer;
 
+    private ToggleButton favTogglebutton;
+
+    private SQLiteDatabase mDb; //database
+    private MovieDbHelper dbHelper;
+    public Movies movieDetail = new Movies("","","", "","","","","");
+
     private String urlJSON="";
     private String movieID="";
     private String movieTrailer="";
@@ -84,16 +102,18 @@ public class childActivity extends AppCompatActivity
 
         reviewLabel = (TextView) findViewById(R.id.labelReview);
 
+        favTogglebutton = (ToggleButton) findViewById(R.id.toggleButton);
+
         Intent intent2 = getIntent();
 
-
-        /*
         if(intent2.hasExtra("titulo")){
-            titulo.setText(intent2.getStringExtra("titulo"));
+            String strTitulo = intent2.getStringExtra("titulo");
+            titulo.setText(strTitulo);
+            movieDetail.setTitulo(strTitulo);
         }else{
             titulo.setText("");
         }
-        */
+
 
         //id
         if(intent2.hasExtra("movieID")){
@@ -101,12 +121,11 @@ public class childActivity extends AppCompatActivity
             movieID = intent2.getStringExtra("movieID");
             movieTrailer = String.format( getString(R.string.base_url_trailer), movieID, getString(R.string.APIKEY));
             movieReview = String.format( getString(R.string.base_url_review), movieID, getString(R.string.APIKEY));
-            //Log.v("RAG","movieTrailer:"+movieTrailer);
-            Log.v("RAG","movieReview:"+movieReview);
 
+            movieDetail.setId(movieID); //add to save later
 
         }else{
-            Log.v("RAG","no movie id found");
+
         }
 
 
@@ -119,35 +138,45 @@ public class childActivity extends AppCompatActivity
                     .load(posterPath)
                     .into(imgView);
 
+            movieDetail.setPathtofile(posterPath);
         }else{
             titulo.setText("");
         }
 
-
+        //ano
         if(intent2.hasExtra("ano")){
             String tmpData = intent2.getStringExtra("ano");
             //String[] parts = tmpData.split("-");
             //String tmpAno = parts[0];
             ano.setText(tmpData);
+            movieDetail.setAno(tmpData);
+
         }else{
             ano.setText("");
         }
 
-
+        //rating
         if(intent2.hasExtra("rating")){
-            String ratingNumber = intent2.getStringExtra("rating") + " / 10";
+            String ratingNumber = intent2.getStringExtra("rating");
             rating.setText(ratingNumber);
+            movieDetail.setRating(ratingNumber);
+
         }else{
             rating.setText("");
+            Log.v("RAG","no rating:");
         }
 
-
+        //sinpose
         if(intent2.hasExtra("sinopse")){
-            String aa = intent2.getStringExtra("sinopse");
-            sinopse.setText(aa);
+            String tmpSinopse = intent2.getStringExtra("sinopse");
+            sinopse.setText(tmpSinopse);
+            movieDetail.setSinopse(tmpSinopse);
         }else{
             sinopse.setText("");
         }
+
+        //checa se esta na lista de favoritos e troca o bt;
+        if(hasMovie(movieDetail.getId())) favTogglebutton.toggle();
 
         //review
         //create/configure recyclerview
@@ -162,7 +191,6 @@ public class childActivity extends AppCompatActivity
 
         //recycleadapter review
         reviewRecyclerAdapter = new ReviewAdapter(listReviews, getBaseContext());
-        //reviewRecyclerView.setAdapter(reviewRecyclerAdapter);
         //----fim review-----
 
 
@@ -180,7 +208,6 @@ public class childActivity extends AppCompatActivity
 
         //recycleadapter review
         trailerRecyclerAdapter = new TrailerAdapter(listTrailer, getBaseContext());
-        //trailerRecyclerView.setAdapter(reviewRecyclerAdapter);
         //----fim review-----
 
 
@@ -189,8 +216,8 @@ public class childActivity extends AppCompatActivity
             if(isOnline()){
 
                 Bundle queryBundle = new Bundle();
-                queryBundle.putString("REVIEW_URL", movieReview.toString());
-                queryBundle.putString("TRAILER_URL", movieTrailer.toString());
+                queryBundle.putString("REVIEW_URL", movieReview);
+                queryBundle.putString("TRAILER_URL", movieTrailer);
 
                 LoaderManager loaderManager = getSupportLoaderManager();
                 Loader<String> reviewLoader = loaderManager.getLoader(reviewLoaderID);
@@ -199,19 +226,19 @@ public class childActivity extends AppCompatActivity
 
                 // COMPLETED (23) If the Loader was null, initialize it. Else, restart it.
                 if (reviewLoader == null) {
-                    Log.v("RAG", "loader review inicializado");
+                    //Log.v("RAG", "loader review inicializado");
                     loaderManager.initLoader(reviewLoaderID, queryBundle, this);
                 } else {
-                    Log.v("RAG", "loader review restarted");
+                    //Log.v("RAG", "loader review restarted");
                     loaderManager.restartLoader(reviewLoaderID, queryBundle, this);
                 }
 
 
                 if (trailerLoader == null) {
-                    Log.v("RAG", "loader trailer inicializado");
+                    //Log.v("RAG", "loader trailer inicializado");
                     loaderManager.initLoader(trailerLoaderID, queryBundle, this);
                 } else {
-                    Log.v("RAG", "loader trailer restarted");
+                    //Log.v("RAG", "loader trailer restarted");
                     loaderManager.restartLoader(trailerLoaderID, queryBundle, this);
                 }
 
@@ -236,13 +263,13 @@ public class childActivity extends AppCompatActivity
     @Override
     public Loader<String> onCreateLoader(int id, final Bundle args) {
 
-        Log.v("RAG","onCreateLoader:"+ String.valueOf(id));
+        //Log.v("RAG","onCreateLoader id:"+ String.valueOf(id));
 
         switch(id)
         {
 
+            //load review
             case 23:
-                Log.v("RAG", String.valueOf(id));
                 return new AsyncTaskLoader<String>(this) {
 
                     String jsonReviewResult;
@@ -262,7 +289,7 @@ public class childActivity extends AppCompatActivity
                             //pega do cache ou carrega
                             String aa = (jsonReviewResult != null) ? "pega cache" : "pega internet";
 
-                            Log.v("RAG", "onStartLoading() " + aa + " / " + jsonReviewResult);
+                            //Log.v("RAG", "onStartLoading review() " + aa + " / " + jsonReviewResult);
 
                             if (jsonReviewResult != null) {
                                 deliverResult(jsonReviewResult);
@@ -321,7 +348,7 @@ public class childActivity extends AppCompatActivity
                                 reviewLabel.setText("No reviews yet");
                             }
 
-                            Log.v("RAG", "listReviews size:" + listReviews.size());
+                            //Log.v("RAG", "listReviews size:" + listReviews.size());
 
                         } catch (IOException e1) {
                             e1.printStackTrace();
@@ -347,9 +374,8 @@ public class childActivity extends AppCompatActivity
 
                 };
 
-
+            //load trailer
             case 24:
-
                 return new AsyncTaskLoader<String>(this) {
                     String jsonTrailerResult;
 
@@ -367,7 +393,7 @@ public class childActivity extends AppCompatActivity
                         //pega do cache ou carrega
                         String aa = (jsonTrailerResult != null) ? "pega cache" : "pega internet";
 
-                        Log.v("RAG", "onStartLoading trailer() " + aa + " / " + jsonTrailerResult);
+                        //Log.v("RAG", "onStartLoading trailer() " + aa + " / " + jsonTrailerResult);
 
                         if (jsonTrailerResult != null) {
                             deliverResult(jsonTrailerResult);
@@ -388,7 +414,7 @@ public class childActivity extends AppCompatActivity
 
                         try {
 
-                            Log.v("RAG","loadInBackground trailer():"+args.getString(TRAILER_URL));
+                            //Log.v("RAG","loadInBackground trailer():"+args.getString(TRAILER_URL));
                             String searchQueryUrlString = args.getString(TRAILER_URL);
 
                             URL urlSearch = new URL(searchQueryUrlString);
@@ -400,7 +426,7 @@ public class childActivity extends AppCompatActivity
                             JSONObject jsonObject = new JSONObject(strJsonResult);
                             JSONArray array = jsonObject.getJSONArray("results");
 
-                            Log.v("RAG","trailer length:"+array.length());
+                            //Log.v("RAG","trailer length:"+array.length());
 
                             listTrailer.clear();
                             if (array.length() > 0) {
@@ -415,7 +441,7 @@ public class childActivity extends AppCompatActivity
 
                                     if (listTrailer.size()<2) listTrailer.add(item);
 
-                                    Log.v("RAG", "name:"+name);
+                                    //Log.v("RAG", "name:"+name);
                                     //Log.v("RAG", "content:"+content);
                                 }
 
@@ -427,7 +453,7 @@ public class childActivity extends AppCompatActivity
                                 //reviewLabel.setText("No reviews yet");
                             }
 
-                            Log.v("RAG", "listTrailer size:" + listTrailer.size());
+                            //Log.v("RAG", "listTrailer size:" + listTrailer.size());
 
                         } catch (IOException e1) {
                             e1.printStackTrace();
@@ -495,6 +521,37 @@ public class childActivity extends AppCompatActivity
     //END LOADER
     //
 
+    //bt favorites
+    public void toggleclick(View v) {
+
+        //Log.v("RAG","movie rating:"+movieDetail.getRating());
+
+        //add to fav
+        if (favTogglebutton.isChecked()) {
+
+            if(hasMovie(movieDetail.getId())){
+                //Log.v("RAG","movie id key already exists:"+movieDetail.getId());
+            }else{
+                //listMovies.add(item);
+                long numID = addNewMovieToTable(movieDetail);
+
+                //Log.v("RAG","movie id added:"+numID);
+            }
+
+        //remove from fav
+        }else{
+
+            if(hasMovie(movieDetail.getId())){
+                boolean isDeleted = deleteData(movieDetail.getId());
+
+                //if(isDeleted) Log.v("RAG", "movie deleted");
+
+            }else{
+                Log.v("RAG", "no movie with id:" + movieDetail.getId());
+            }
+        }
+    }
+
 
     public boolean isOnline() {
         ConnectivityManager cm =
@@ -502,8 +559,6 @@ public class childActivity extends AppCompatActivity
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
-
-
 
 
     private Cursor getMovie(String movieID) {
@@ -527,11 +582,11 @@ public class childActivity extends AppCompatActivity
         MovieDbHelper dbHelper = new MovieDbHelper(this);
         SQLiteDatabase mDB = dbHelper.getReadableDatabase();
 
-        String selection = MovieContract.MovieListEntry.COLUMN_IDMOVIE + "=?";
+        String selection = COLUMN_IDMOVIE + "=?";
         String[] selectionArgs = {movieID};
 
         Cursor cursor = mDB.query(
-                MovieContract.MovieListEntry.TABLE_NAME,
+                TABLE_NAME,
                 null,
                 selection,
                 selectionArgs,
@@ -542,6 +597,121 @@ public class childActivity extends AppCompatActivity
 
         return cursor;
 
+    }
+
+
+    //
+    // DB functions
+    //
+
+    //add a new movie to the db
+    private long addNewMovieToTable(Movies movie){
+
+        mDb = dbHelper.getWritableDatabase();
+
+        long idMovieRecord = 0;
+        try
+        {
+            ContentValues cv = new ContentValues();
+            cv.put(COLUMN_TITULO, movie.getTitulo());
+            cv.put(COLUMN_IDMOVIE, movie.getId());
+            cv.put(COLUMN_ANO, movie.getAno());
+            cv.put(COLUMN_SINOPSE, movie.getSinopse());
+            cv.put(COLUMN_RATING, movie.getRating());
+            cv.put(COLUMN_DURACAO, movie.getDuracao());
+            //cv.put(COLUMN_FAVORITOS, movie.getTitulo());
+            cv.put(COLUMN_IMAGEPATH, movie.getPathtofile());
+
+            mDb.beginTransaction();
+            idMovieRecord =  mDb.insert(TABLE_NAME, null, cv);
+            mDb.setTransactionSuccessful();
+
+        }
+        catch (SQLException e) {
+            Log.v("RAG",e.toString());
+            //too bad :(
+        }
+        finally
+        {
+            mDb.endTransaction();
+
+            //close
+            if(mDb != null) mDb.close();
+        }
+
+        return idMovieRecord;
+
+    }
+
+
+    //query for empty db
+    private boolean hasDbRecords(){
+
+
+        Boolean rowExists = false;
+
+        try {
+
+            Cursor mCursor = mDb.query(TABLE_NAME,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    COLUMN_TITULO
+            );
+
+
+            if (mCursor.moveToFirst())
+            {
+                rowExists = true;
+            }
+
+        }
+        catch (SQLException e) {
+            Log.v("RAG","hasDbRecords:"+e.toString());
+            //too bad :(
+        }
+
+        return rowExists;
+
+    }
+
+
+
+    public boolean hasMovie(String id) {
+
+        dbHelper = new MovieDbHelper(this);
+        mDb = dbHelper.getWritableDatabase();
+
+        Cursor cursor = null;
+        String selectString = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_IDMOVIE + " =?";
+
+        try {
+            //set string nside array to avoid erros with - character
+            cursor = mDb.rawQuery(selectString, new String[] {id});
+            return cursor.moveToNext();
+        } finally {
+
+            //close
+            if (cursor != null) cursor.close();
+            if(mDb != null) mDb.close();
+
+        }
+    }
+
+
+    public boolean deleteData(String id)
+    {
+        mDb = dbHelper.getWritableDatabase();
+        return  mDb.delete(TABLE_NAME,  COLUMN_IDMOVIE+ " = ?",new String[] {id}) > 0;
+    }
+
+    public Cursor getAllData()
+    {
+        mDb = dbHelper.getWritableDatabase();
+        Cursor res=mDb.rawQuery("select * from "+TABLE_NAME,null);
+        return res;
     }
 
 

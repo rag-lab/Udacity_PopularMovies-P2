@@ -25,8 +25,7 @@
             android:textSize="@dimen/txtTitulo24"
             android:layout_centerHorizontal="true"
             tools:layout_editor_absoluteY="0dp"
-            tools:layout_editor_absoluteX="0dp"
-            android:text="Titulo"/>
+            tools:layout_editor_absoluteX="0dp"/>
 
         <!-- thumb -->
         <ImageView
@@ -48,21 +47,38 @@
             android:paddingLeft="@dimen/padding15"
             android:paddingStart="@dimen/padding15"
             android:textSize="@dimen/txtAno20"
-            android:text="2017"/>
+            android:text=""/>
+
+
 
         <!-- rating -->
         <TextView
             android:id="@+id/rating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="@dimen/textSize12sp"
             android:layout_below="@+id/ano"
             android:layout_toRightOf="@+id/thumb"
             android:layout_toEndOf="@+id/thumb"
             android:layout_marginLeft="@dimen/padding15"
             android:layout_marginStart="@dimen/padding15"
-            android:layout_marginTop="@dimen/margin5"
-            android:text="4.3"/>
+            android:layout_marginTop="@dimen/margin5"/>
+
+
+        <ToggleButton
+            android:id="@+id/toggleButton"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_below="@+id/rating"
+            android:layout_toEndOf="@+id/thumb"
+            android:background="@drawable/selector"
+            android:layout_marginLeft="@dimen/padding15"
+            android:checked="false"
+            android:gravity="left"
+            android:onClick="toggleclick"
+            android:text=""
+            android:textOff=""
+            android:textOn="" />
 
         <!-- sinopse -->
         <TextView
@@ -75,7 +91,9 @@
             android:layout_alignStart="@+id/thumb"
             android:paddingRight="@dimen/paddingRight10"
             android:paddingLeft="@dimen/paddingLeft10"
-            android:text="Sinopste"/>
+            android:text=""
+            android:paddingStart="@dimen/paddingLeft10"
+            android:paddingEnd="@dimen/paddingRight10" />
 
         <!-- label trailer-->
         <TextView
@@ -86,13 +104,15 @@
             android:layout_marginTop="@dimen/margin15"
             android:paddingLeft="@dimen/paddingLeft10"
             android:paddingRight="@dimen/paddingRight10"
-            android:text="Trailer:" />
+            android:text="@string/lblTrailer"
+            android:paddingStart="@dimen/paddingLeft10"
+            android:paddingEnd="@dimen/paddingRight10" />
 
         <!-- recyclerview trailer-->
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recyclerviewTrailer"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:scrollbars="vertical"
             android:layout_below="@id/labelTrailer"/>
 
@@ -105,7 +125,7 @@
             android:paddingLeft="@dimen/paddingLeft10"
             android:paddingRight="@dimen/paddingRight10"
             android:layout_below="@id/recyclerviewTrailer"
-            android:text="Reviews:" />
+            android:text="@string/lblReview" />
 
         <!-- recyclerview review -->
         <android.support.v7.widget.RecyclerView

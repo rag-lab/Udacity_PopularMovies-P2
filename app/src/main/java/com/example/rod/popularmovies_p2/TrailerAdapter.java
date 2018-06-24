@@ -3,9 +3,7 @@ package com.example.rod.popularmovies_p2;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.net.Uri;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -74,7 +72,7 @@ public class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.myViewHo
         final String tr_name = listItem.getName();
         final String tr_key = listItem.getKey();
 
-        holderTrailer.titulo.setText(tr_name);
+        holderTrailer.titulo.setText(tr_name+" ajd ahskldja hdlkasjdh alskdj");
 
         //onclick
         holderTrailer.youtubeImgBt.setOnClickListener(new View.OnClickListener() {

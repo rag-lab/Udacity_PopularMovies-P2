@@ -3,7 +3,7 @@
 
     <dimen name="thumbHeight">270dp</dimen>
     <dimen name="thumbWidth">200dp</dimen>
-
+    <dimen name="textSize12sp">12sp</dimen>
     <dimen name="padding15">15dp</dimen>
     <dimen name="padding_15">15dp</dimen>
     <dimen name="paddingLeft10">10dp</dimen>

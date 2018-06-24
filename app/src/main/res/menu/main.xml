@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!--
+
     <item
         android:orderInCategory="1"
         android:id="@+id/menuit1"
@@ -14,16 +14,21 @@
         android:id="@+id/menuit2"
         android:title="@string/MENUITEM2">
     </item>
--->
 
+    <item
+        android:orderInCategory="3"
+        android:id="@+id/menuit3"
+        android:title="@string/MENUITEM3">
+    </item>
+
+
+    <!--
     <item
         android:orderInCategory="1"
         android:id="@+id/menuit1"
         android:title="@string/action_settings"
-        app:showAsAction="never"
-
-        >
+        app:showAsAction="never">
     </item>
-
+    -->
 
 </menu>

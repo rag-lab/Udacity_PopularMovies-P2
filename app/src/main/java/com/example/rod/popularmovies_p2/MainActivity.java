@@ -1,16 +1,12 @@
 package com.example.rod.popularmovies_p2;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Environment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
@@ -24,27 +20,22 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
-
-import com.example.rod.popularmovies_p2.data.MovieContract;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.*;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends android.support.v7.app.AppCompatActivity
         implements LoaderManager.LoaderCallbacks<String> {
 
 
@@ -86,30 +77,24 @@ public class MainActivity extends AppCompatActivity
 
             if(isOnline()){
 
-                //dbHelper = new MovieDbHelper(this);
-                //mDb = dbHelper.getWritableDatabase();
+                dbHelper = new MovieDbHelper(this);
+                mDb = dbHelper.getWritableDatabase();
 
-                //if(hasDbRecords()){
-                 if(false){
-                    Log.v("RAG", "db has records");
+                Bundle queryBundle = new Bundle();
+                queryBundle.putString(SEARCH_URL, urlJSON);
 
-                }else{
+                LoaderManager loaderManager = getSupportLoaderManager();
+                Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
 
-                    Bundle queryBundle = new Bundle();
-                    queryBundle.putString(SEARCH_URL, urlJSON);
+                if (thumbsLoader == null) {
+                    //Log.v("RAG", "loader inicializado");
+                    loaderManager.initLoader(thumbLoaderID, queryBundle, this);
+                } else {
 
-                    LoaderManager loaderManager = getSupportLoaderManager();
-                    Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
-
-                    if (thumbsLoader == null) {
-                        //Log.v("RAG", "loader inicializado");
-                        loaderManager.initLoader(thumbLoaderID, queryBundle, this);
-                    } else {
-
-                        //Log.v("RAG", "loader re-inicializado");
-                        loaderManager.restartLoader(thumbLoaderID, queryBundle, this);
-                    }
+                    //Log.v("RAG", "loader re-inicializado");
+                    loaderManager.restartLoader(thumbLoaderID, queryBundle, this);
                 }
+
 
             }else{
 
@@ -145,7 +130,7 @@ public class MainActivity extends AppCompatActivity
 
                 //pega do cache ou carrega
                 if (mResult != null) {
-                    //Log.v("RAG","onStartLoading from cache() "+ mResult);
+                    Log.v("RAG","onStartLoading from cache() "+ mResult);
                     deliverResult(mResult);
                 } else {
 
@@ -163,48 +148,87 @@ public class MainActivity extends AppCompatActivity
                     //Log.v("RAG", "loadInBackground():" + isOnline());
 
                     String searchQueryUrlString = args.getString(SEARCH_URL);
-
-                    URL urlSearch = new URL(searchQueryUrlString);
-                    String strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
-                    mResult = strJsonResult;
-
-                    JSONObject jsonObject = new JSONObject(strJsonResult);
-                    JSONArray array = jsonObject.getJSONArray("results");
+                    Cursor cursor;
 
                     listMovies.clear();
 
-                    for (int i = 0; i < array.length(); i++) {
+                    if (searchQueryUrlString!="favorites") {
 
-                        JSONObject o = array.getJSONObject(i);
+                        URL urlSearch = new URL(searchQueryUrlString);
+                        String strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
 
-                        //get base poster path
-                        String poster_path = getString(R.string.base_url_poster);
-                        poster_path += o.getString("poster_path");
+                        mResult = strJsonResult;
 
-                        String titulo = o.getString("original_title");
-                        String ano = o.getString("release_date");
-                        String duracao = o.getString("vote_count");
-                        String sinopse = o.getString("overview");
-                        String rating = o.getString("vote_average");
-                        String id = o.getString("id");
+                        JSONObject jsonObject = new JSONObject(strJsonResult);
+                        JSONArray array = jsonObject.getJSONArray("results");
+                        //Log.v("RAG","strJsonResult:"+strJsonResult);
 
-                        //Bitmap poster = loadImageFromURL(poster_path);
-                        //String pathToPosterFile = saveBitmap(poster, id + ".png");
+                        for (int i = 0; i < array.length(); i++) {
 
+                            JSONObject o = array.getJSONObject(i);
 
-                        Movies item = new Movies(titulo,
-                                poster_path,
-                                duracao,
-                                ano,
-                                sinopse,
-                                rating,
-                                id,
-                                "pathToPosterFile");
+                            //get base poster path
+                            String poster_path = getString(R.string.base_url_poster);
+                            poster_path += o.getString("poster_path");
 
-                        listMovies.add(item);
+                            String titulo = o.getString("original_title");
+                            String ano = o.getString("release_date");
+                            String duracao = "100min";//o.getString("vote_count");
+                            String sinopse = o.getString("overview");
+                            String rating = o.getString("vote_average");
+                            rating+= " / 10";
+                            String id = o.getString("id");
 
-                        //long numID = addNewMovies(item);
-                        //Log.v("RAG","pathToPosterFile:"+pathToPosterFile);
+                            //Bitmap poster = loadImageFromURL(poster_path);
+                            //String pathToPosterFile = saveBitmap(poster, id + ".png");
+
+                            Movies item = new Movies(titulo,
+                                    poster_path,
+                                    duracao,
+                                    ano,
+                                    sinopse,
+                                    rating,
+                                    id,
+                                    "pathToPosterFile");
+
+                            listMovies.add(item);
+
+                            //Log.v("RAG","rating:"+item.getRating());
+                            //Log.v("RAG","id:"+id);
+                            //Log.v("RAG","movie id key:"+numID);
+                        }
+                    }
+                    else
+                    {
+                        cursor = getAllData();
+
+                        if (cursor.moveToFirst()){
+                            while(!cursor.isAfterLast()){
+
+                                String titulo = cursor.getString(cursor.getColumnIndex("titulo"));
+                                String posterPath = cursor.getString(cursor.getColumnIndex("image"));
+                                String ano = cursor.getString(cursor.getColumnIndex("ano"));
+                                String duracao = cursor.getString(cursor.getColumnIndex("duracao"));
+                                String sinopse = cursor.getString(cursor.getColumnIndex("sinopse"));
+                                String rating = cursor.getString(cursor.getColumnIndex("rating"));
+                                String id = cursor.getString(cursor.getColumnIndex("_id"));
+
+                                //Bitmap poster = loadImageFromURL(poster_path);
+                                //String pathToPosterFile = saveBitmap(poster, id + ".png");
+                                Movies item = new Movies(titulo,
+                                        posterPath,
+                                        duracao,
+                                        ano,
+                                        sinopse,
+                                        rating,
+                                        id,
+                                        posterPath);
+
+                                listMovies.add(item);
+                                cursor.moveToNext();
+                            }
+                        }
+                        cursor.close();
 
                     }
 
@@ -240,7 +264,7 @@ public class MainActivity extends AppCompatActivity
     public void onLoadFinished(Loader<String> loader, String data) {
 
         recMainActivity.setAdapter(recyclerAdapter);
-        Log.v("RAG","onLoadFinished listMovies:"+listMovies.size());
+        //Log.v("RAG","onLoadFinished listMovies:"+listMovies.size());
         //Toast toast = Toast.makeText(getApplicationContext(), "finish loading movies:"+ loader.getId(),Toast.LENGTH_SHORT);
         //toast.show();
     }
@@ -258,89 +282,6 @@ public class MainActivity extends AppCompatActivity
     //
 
 
-    //not in use...
-    public class loadDataInBackground extends  AsyncTask<URL, Void, String> {
-
-        @Override
-        protected void onPostExecute(String s) {
-
-            recMainActivity.setAdapter(recyclerAdapter);
-            //recyclerAdapter.notifyDataStateChanged();
-            Log.v("RAG","onPostExecute"+s.toString());
-        }
-
-        @Override
-        protected void onProgressUpdate(Void... values) {
-            super.onProgressUpdate(values);
-        }
-
-
-        @Override
-        protected String doInBackground(URL... params) {
-
-            Log.v("RAG","doInBackground");
-            URL urlSearch = params[0];
-            String aa="";
-
-            try {
-
-                aa = Util.getResponseFromHttpUrl(urlSearch);
-
-                JSONObject jsonObject = new JSONObject(aa);
-                JSONArray array = jsonObject.getJSONArray("results");
-
-                listMovies.clear();
-
-                for(int i = 0;i<array.length();i++)
-                {
-                    JSONObject o = array.getJSONObject(i);
-
-                    //get base poster path
-                    String poster_path = getString(R.string.base_url_poster);
-                    poster_path += o.getString("poster_path");
-
-                    String titulo = o.getString("original_title");
-                    String ano = o.getString("release_date");
-                    String duracao = o.getString("vote_count");
-                    String sinopse = o.getString("overview");
-                    String rating = o.getString("vote_average");
-                    String id = o.getString("id");
-
-                    Movies item = new Movies(titulo,
-                            poster_path,
-                            duracao,
-                            ano,
-                            sinopse,
-                            rating,
-                            id,"");
-
-                    listMovies.add(item);
-
-                    //long numID = addNewMovies(item);
-                    //Log.v("RAG","numID:"+numID);
-
-                    //Log.v("RAG", "path:"+poster_path);
-                    //Log.v("RAG", "id:"+id);
-
-                }
-
-                recyclerAdapter = new RecyclerAdapter(listMovies, getApplicationContext());
-
-
-            } catch (IOException e1) {
-                e1.printStackTrace();
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            return aa;
-        }
-
-
-    }
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         //getMenuInflater().inflate(R.menu.main, menu);
@@ -354,27 +295,39 @@ public class MainActivity extends AppCompatActivity
 
         int menuId = item.getItemId();
 
-
-        if(menuId==R.id.menuit1){
-            Intent startSettings = new Intent(this, SettingsActivity.class);
-            startActivity(startSettings);
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-
-        /*
+        //popular
         if(menuId==R.id.menuit1){
             urlJSON = String.format( getString(R.string.base_url_popular),getString(R.string.APIKEY));
-        }else{
+        //highest rated
+        }else if(menuId==R.id.menuit2)
+        {
             urlJSON = String.format( getString(R.string.base_url_toprated),getString(R.string.APIKEY));
+        }
+        //favorites
+        else if(menuId==R.id.menuit3)
+        {
+            urlJSON = "favorites";
         }
 
         try {
 
             if(isOnline()){
 
-                new loadDataInBackground().execute(new URL(urlJSON));
+                //new loadDataInBackground().execute(new URL(urlJSON));
+
+                Bundle queryBundle = new Bundle();
+                queryBundle.putString(SEARCH_URL, urlJSON);
+
+                LoaderManager loaderManager = getSupportLoaderManager();
+                Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
+
+                if (thumbsLoader == null) {
+                    //Log.v("RAG", "loader inicializado");
+                    loaderManager.initLoader(thumbLoaderID, queryBundle, this);
+                } else {
+                    //Log.v("RAG", "loader re-inicializado");
+                    loaderManager.restartLoader(thumbLoaderID, queryBundle, this);
+                }
 
             }else{
 
@@ -384,11 +337,11 @@ public class MainActivity extends AppCompatActivity
             }
 
 
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        */
 
+        return super.onOptionsItemSelected(item);
 
     }
 
@@ -399,7 +352,6 @@ public class MainActivity extends AppCompatActivity
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
-
 
 
 
@@ -427,6 +379,7 @@ public class MainActivity extends AppCompatActivity
         return myBitmap;
 
     }
+
 
     public String saveBitmap(Bitmap bm, String name) throws Exception {
 
@@ -465,76 +418,11 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    //
-    // DB functions
-    //
-
-    //add a new movie to the db
-    private long addNewMovies(Movies movie){
-
-        long idMovieRecord = 0;
-        try
-        {
-            ContentValues cv = new ContentValues();
-            cv.put(COLUMN_TITULO, movie.getTitulo());
-            cv.put(COLUMN_IDMOVIE, movie.getId());
-            cv.put(COLUMN_ANO, movie.getAno());
-            cv.put(COLUMN_SINOPSE, movie.getSinopse());
-            cv.put(COLUMN_RATING, movie.getRating());
-            //cv.put(COLUMN_FAVORITOS, movie.getTitulo());
-            cv.put(COLUMN_IMAGEPATH, movie.getPathtofile());
-
-
-            mDb.beginTransaction();
-            idMovieRecord =  mDb.insert(TABLE_NAME, null, cv);
-            mDb.setTransactionSuccessful();
-
-        }
-        catch (SQLException e) {
-            Log.v("RAG",e.toString());
-            //too bad :(
-        }
-
-        finally
-        {
-            mDb.endTransaction();
-        }
-
-        return idMovieRecord;
-
-    }
-
-
-    //query for empty db
-    private boolean hasDbRecords(){
-
-        Boolean rowExists = false;
-
-        try {
-
-            Cursor mCursor = mDb.query(TABLE_NAME,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                COLUMN_TITULO
-                    );
-
-
-            if (mCursor.moveToFirst())
-            {
-                rowExists = true;
-            }
-
-        }
-        catch (SQLException e) {
-            Log.v("RAG","hasDbRecords:"+e.toString());
-                //too bad :(
-        }
-
-        return rowExists;
-
+    public Cursor getAllData()
+    {
+        mDb = dbHelper.getWritableDatabase();
+        Cursor res=mDb.rawQuery("select * from "+TABLE_NAME,null);
+        return res;
     }
 
 }

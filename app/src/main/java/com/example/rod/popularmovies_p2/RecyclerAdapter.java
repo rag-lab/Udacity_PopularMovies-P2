@@ -142,15 +142,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
                     @Override
                     public void onSuccess() {
                         //Log.d("RAG", "onSuccess:"+r_thumbPath);
-
-                        try{
-
-
-
-                        }catch (Exception ex){
-                            Log.v("RAG", "fail saving image:"+ex.toString());
-                        }
-
                     }
 
                     @Override
@@ -158,17 +149,6 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
                         Toast.makeText(context, "error loading picasso image", Toast.LENGTH_SHORT).show();
                     }
                 });
-
-
-
-        //Picasso.with(context)
-          //      .load(listItem.getUrlCapa())
-        //        .into(holder.capaFilme)
-
-        //Bitmap bmPosterImage = loadBitmapFromView(holder.capaFilme);
-        //String fileName = "gggj";//String.format("%d.jpg", System.currentTimeMillis());
-
-
 
         holder.capaFilme.setOnClickListener(new View.OnClickListener() {
 
@@ -190,8 +170,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.myView
             }
         });
 
-
     }
+
 
     @Override
     public int getItemCount() {
