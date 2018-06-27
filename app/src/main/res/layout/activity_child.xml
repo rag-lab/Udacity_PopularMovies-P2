@@ -23,9 +23,11 @@
             android:paddingLeft="@dimen/paddingLeft10"
             android:paddingStart="@dimen/paddingRight10"
             android:textSize="@dimen/txtTitulo24"
+            android:textColor="@color/colorPrimary"
             android:layout_centerHorizontal="true"
             tools:layout_editor_absoluteY="0dp"
-            tools:layout_editor_absoluteX="0dp"/>
+            tools:layout_editor_absoluteX="0dp"
+            />
 
         <!-- thumb -->
         <ImageView
@@ -78,7 +80,8 @@
             android:onClick="toggleclick"
             android:text=""
             android:textOff=""
-            android:textOn="" />
+            android:textOn=""
+            android:layout_toRightOf="@+id/thumb" />
 
         <!-- sinopse -->
         <TextView
@@ -93,7 +96,8 @@
             android:paddingLeft="@dimen/paddingLeft10"
             android:text=""
             android:paddingStart="@dimen/paddingLeft10"
-            android:paddingEnd="@dimen/paddingRight10" />
+            android:paddingEnd="@dimen/paddingRight10"
+            android:textColor="@color/colorPrimary"/>
 
         <!-- label trailer-->
         <TextView

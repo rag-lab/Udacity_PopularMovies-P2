@@ -11,6 +11,7 @@ import android.net.NetworkInfo;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.content.AsyncTaskLoader;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -93,6 +94,8 @@ public class childActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_child);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true); //bt back
+
         titulo = (TextView) findViewById(R.id.titulo);
         imgView = (ImageView) findViewById(R.id.thumb);
         ano = (TextView) findViewById(R.id.ano);
@@ -124,8 +127,10 @@ public class childActivity extends AppCompatActivity
 
             movieDetail.setId(movieID); //add to save later
 
-        }else{
+            Log.v("RAG","movie id intent"+movieID);
 
+        }else{
+            Log.v("RAG","no movie id");
         }
 
 
@@ -176,7 +181,16 @@ public class childActivity extends AppCompatActivity
         }
 
         //checa se esta na lista de favoritos e troca o bt;
-        if(hasMovie(movieDetail.getId())) favTogglebutton.toggle();
+        //
+        //
+        if(hasMovie(movieDetail.getId())) {
+            //boolean aa = favTogglebutton.isChecked();
+            //Log.v("RAG",Boolean.toString(aa));
+
+            //if(!favTogglebutton.isChecked()) {
+                favTogglebutton.toggle();
+            //}
+        };
 
         //review
         //create/configure recyclerview
@@ -626,6 +640,8 @@ public class childActivity extends AppCompatActivity
             idMovieRecord =  mDb.insert(TABLE_NAME, null, cv);
             mDb.setTransactionSuccessful();
 
+
+            Log.v("RAG","moive id:"+movie.getId());
         }
         catch (SQLException e) {
             Log.v("RAG",e.toString());

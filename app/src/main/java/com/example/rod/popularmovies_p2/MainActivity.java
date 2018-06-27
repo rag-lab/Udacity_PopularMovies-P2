@@ -130,7 +130,7 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
 
                 //pega do cache ou carrega
                 if (mResult != null) {
-                    Log.v("RAG","onStartLoading from cache() "+ mResult);
+                    //Log.v("RAG","onStartLoading from cache() "+ mResult);
                     deliverResult(mResult);
                 } else {
 
@@ -202,7 +202,8 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                     {
                         cursor = getAllData();
 
-                        if (cursor.moveToFirst()){
+                        if (cursor.moveToFirst())
+                        {
                             while(!cursor.isAfterLast()){
 
                                 String titulo = cursor.getString(cursor.getColumnIndex("titulo"));
@@ -211,7 +212,7 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                                 String duracao = cursor.getString(cursor.getColumnIndex("duracao"));
                                 String sinopse = cursor.getString(cursor.getColumnIndex("sinopse"));
                                 String rating = cursor.getString(cursor.getColumnIndex("rating"));
-                                String id = cursor.getString(cursor.getColumnIndex("_id"));
+                                String id = cursor.getString(cursor.getColumnIndex("idmovie"));
 
                                 //Bitmap poster = loadImageFromURL(poster_path);
                                 //String pathToPosterFile = saveBitmap(poster, id + ".png");
@@ -227,6 +228,10 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                                 listMovies.add(item);
                                 cursor.moveToNext();
                             }
+                        }else{
+                            Toast toast = Toast.makeText(getApplicationContext(), "No favorites yet",
+                                    Toast.LENGTH_SHORT);
+                            toast.show();
                         }
                         cursor.close();
 
