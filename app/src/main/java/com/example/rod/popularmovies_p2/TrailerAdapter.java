@@ -72,7 +72,7 @@ public class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.myViewHo
         final String tr_name = listItem.getName();
         final String tr_key = listItem.getKey();
 
-        holderTrailer.titulo.setText(tr_name+" ajd ahskldja hdlkasjdh alskdj");
+        holderTrailer.titulo.setText(tr_name);
 
         //onclick
         holderTrailer.youtubeImgBt.setOnClickListener(new View.OnClickListener() {
@@ -81,10 +81,9 @@ public class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.myViewHo
             public void onClick(View view) {
 
                 String url_youtube = context.getString(R.string.base_url_youtube) + tr_key;
-                Log.v("RAG","url_youtube:"+ url_youtube);
+                //Log.v("RAG","url_youtube:"+ url_youtube);
 
                 Uri webpage = Uri.parse(url_youtube);
-
 
                 //intent paa abrir app
                 Intent intentApp = new Intent(Intent.ACTION_VIEW, webpage);
