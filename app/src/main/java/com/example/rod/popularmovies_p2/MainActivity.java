@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -15,11 +16,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
+
+import com.example.rod.popularmovies_p2.data.MovieContract;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,14 +39,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import static com.example.rod.popularmovies_p2.data.MovieContract.MovieListEntry.*;
 
 public class MainActivity extends android.support.v7.app.AppCompatActivity
-        implements LoaderManager.LoaderCallbacks<String> {
+        implements LoaderManager.LoaderCallbacks<Cursor> {
 
 
     /* A constant to save and restore the URL that is being displayed */
     private static final String SEARCH_URL = "";
+    private final String KEY_RECYCLER_STATE = "recycler_state";
+    private static Bundle mBundleRVState;
 
     private RecyclerView recMainActivity;
     private RecyclerAdapter recyclerAdapter;
@@ -61,15 +70,13 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
         recMainActivity = (RecyclerView) findViewById(R.id.recMainActivity);
         recMainActivity.setHasFixedSize(true);
 
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getBaseContext(), 2);
+        int posterWidth = 600;
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getBaseContext(), calculateBestSpanCount(posterWidth));
+
         recMainActivity.setLayoutManager(gridLayoutManager);
-
-        //Cursor cursor = getAllMovies();
-        //Log.v("RAG", "listMovies size():"+listMovies.size());
-
         recyclerAdapter = new RecyclerAdapter(listMovies, getBaseContext());
-
         recMainActivity.setAdapter(recyclerAdapter);
+
         urlJSON = String.format( getString(R.string.base_url_popular),getString(R.string.APIKEY));
         Log.v("RAG", urlJSON);
 
@@ -109,17 +116,52 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
 
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        //tToast("onStart");
+    }
+
+    @Override
+    public void onRestart() {
+        super.onRestart();
+        //tToast("onRestart");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //tToast("onResume");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        // save RecyclerView state
+        mBundleRVState = new Bundle();
+        Parcelable listState = recMainActivity.getLayoutManager().onSaveInstanceState();
+        mBundleRVState.putParcelable(KEY_RECYCLER_STATE, listState);
+        tToast("onPause: listState saved");
+
+    }
+
+
+
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
 
     //
     //LOADER
     //
     @Override
-    public Loader<String> onCreateLoader(int id, final Bundle args) {
+    public Loader<Cursor> onCreateLoader(int id, final Bundle args) {
 
+        return new AsyncTaskLoader<Cursor>(this){
 
-        return new AsyncTaskLoader<String>(this){
-
-            String mResult;
+            Cursor mResult;
 
             @Override
             protected void onStartLoading() {
@@ -130,18 +172,18 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
 
                 //pega do cache ou carrega
                 if (mResult != null) {
-                    //Log.v("RAG","onStartLoading from cache() "+ mResult);
+                    Log.v("RAG","onStartLoading from cache() "+ mResult);
                     deliverResult(mResult);
                 } else {
 
-                    //Log.v("RAG","forceLoad()");
+                    Log.v("RAG","forceLoad()");
                     this.forceLoad();
                 }
 
             }
 
             @Override
-            public String loadInBackground() {
+            public Cursor loadInBackground() {
 
                 try {
 
@@ -157,7 +199,7 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                         URL urlSearch = new URL(searchQueryUrlString);
                         String strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
 
-                        mResult = strJsonResult;
+                        //mResult = strJsonResult;
 
                         JSONObject jsonObject = new JSONObject(strJsonResult);
                         JSONArray array = jsonObject.getJSONArray("results");
@@ -169,15 +211,15 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
 
                             //get base poster path
                             String poster_path = getString(R.string.base_url_poster);
-                            poster_path += o.getString("poster_path");
+                            poster_path += o.optString("poster_path");
 
-                            String titulo = o.getString("original_title");
-                            String ano = o.getString("release_date");
-                            String duracao = "100min";//o.getString("vote_count");
-                            String sinopse = o.getString("overview");
-                            String rating = o.getString("vote_average");
+                            String titulo = o.optString("original_title");
+                            String ano = o.optString("release_date");
+                            String duracao = "";//o.optString("vote_count");
+                            String sinopse = o.optString("overview");
+                            String rating = o.optString("vote_average");
                             rating+= " / 10";
-                            String id = o.getString("id");
+                            String id = o.optString("id");
 
                             //Bitmap poster = loadImageFromURL(poster_path);
                             //String pathToPosterFile = saveBitmap(poster, id + ".png");
@@ -193,53 +235,72 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
 
                             listMovies.add(item);
 
-                            //Log.v("RAG","rating:"+item.getRating());
-                            //Log.v("RAG","id:"+id);
-                            //Log.v("RAG","movie id key:"+numID);
                         }
+
                     }
                     else
                     {
-                        cursor = getAllData();
 
-                        if (cursor.moveToFirst())
-                        {
-                            while(!cursor.isAfterLast()){
+                        try {
 
-                                String titulo = cursor.getString(cursor.getColumnIndex("titulo"));
-                                String posterPath = cursor.getString(cursor.getColumnIndex("image"));
-                                String ano = cursor.getString(cursor.getColumnIndex("ano"));
-                                String duracao = cursor.getString(cursor.getColumnIndex("duracao"));
-                                String sinopse = cursor.getString(cursor.getColumnIndex("sinopse"));
-                                String rating = cursor.getString(cursor.getColumnIndex("rating"));
-                                String id = cursor.getString(cursor.getColumnIndex("idmovie"));
+                            String[] projection = new String[] { COLUMN_IMAGEPATH,
+                                                                COLUMN_DURACAO,
+                                                                COLUMN_ANO,
+                                                                COLUMN_SINOPSE,
+                                                                COLUMN_RATING,
+                                                                COLUMN_IDMOVIE,
+                                                                COLUMN_TITULO};
 
-                                //Bitmap poster = loadImageFromURL(poster_path);
-                                //String pathToPosterFile = saveBitmap(poster, id + ".png");
-                                Movies item = new Movies(titulo,
-                                        posterPath,
-                                        duracao,
-                                        ano,
-                                        sinopse,
-                                        rating,
-                                        id,
-                                        posterPath);
+                            Cursor favCursor = getContentResolver().query(MovieContract.MovieListEntry.CONTENT_URI,
+                                    projection,
+                                    null,
+                                    null,
+                                    MovieContract.MovieListEntry._ID);
 
-                                listMovies.add(item);
-                                cursor.moveToNext();
+                            if (favCursor.moveToFirst())
+                            {
+                                while(!favCursor.isAfterLast()){
+
+                                    String titulo = favCursor.getString(favCursor.getColumnIndex("titulo"));
+                                    String posterPath = favCursor.getString(favCursor.getColumnIndex("image"));
+                                    String ano = favCursor.getString(favCursor.getColumnIndex("ano"));
+                                    String duracao = favCursor.getString(favCursor.getColumnIndex("duracao"));
+                                    String sinopse = favCursor.getString(favCursor.getColumnIndex("sinopse"));
+                                    String rating = favCursor.getString(favCursor.getColumnIndex("rating"));
+                                    String id = favCursor.getString(favCursor.getColumnIndex("idmovie"));
+
+                                    Movies item = new Movies(titulo,
+                                            posterPath,
+                                            duracao,
+                                            ano,
+                                            sinopse,
+                                            rating,
+                                            id,
+                                            posterPath);
+
+                                    listMovies.add(item);
+
+                                    favCursor.moveToNext();
+                                }
+                            }else{
+                                Toast toast = Toast.makeText(getApplicationContext(), "No favorites yet",
+                                        Toast.LENGTH_SHORT);
+                                toast.show();
                             }
-                        }else{
-                            Toast toast = Toast.makeText(getApplicationContext(), "No favorites yet",
-                                    Toast.LENGTH_SHORT);
-                            toast.show();
+
+                            //mResult = favCursor;
+                            favCursor.close();
+
+                        } catch (Exception e) {
+                            tToast(e.toString());
                         }
-                        cursor.close();
 
                     }
 
                 }
                 catch (IOException e1)
                 {
+                    Log.e("RAG", "Failed to asynchronously load data.");
                     e1.printStackTrace();
                 }
                 catch (JSONException e)
@@ -254,11 +315,11 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
             }
 
             @Override
-            public void deliverResult(String githubJson) {
+            public void deliverResult(Cursor data) {
 
                 //Log.v("RAG","deliverResult:"+githubJson);
-                mResult = githubJson;
-                super.deliverResult(githubJson);
+                //mResult = data;
+                super.deliverResult(data);
             }
 
         };
@@ -266,26 +327,47 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
     }
 
     @Override
-    public void onLoadFinished(Loader<String> loader, String data) {
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
 
         recMainActivity.setAdapter(recyclerAdapter);
-        //Log.v("RAG","onLoadFinished listMovies:"+listMovies.size());
-        //Toast toast = Toast.makeText(getApplicationContext(), "finish loading movies:"+ loader.getId(),Toast.LENGTH_SHORT);
-        //toast.show();
+
+        // restore RecyclerView state
+        if (mBundleRVState != null) {
+            Parcelable listState = mBundleRVState.getParcelable(KEY_RECYCLER_STATE);
+            recMainActivity.getLayoutManager().onRestoreInstanceState(listState);
+        }
+
     }
+
 
     @Override
-    public void onLoaderReset(Loader<String> loader) {
-
+    public void onLoaderReset(Loader<Cursor> loader) {
         Log.v("RAG", "onLoaderReset");
-        //Toast toast = Toast.makeText(getApplicationContext(), "loader reseted",Toast.LENGTH_SHORT);
-        //toast.show();
     }
 
-    //
+    /*
     //END LOADER
-    //
+    */
 
+
+    private int calculateBestSpanCount(int posterWidth) {
+        Display display = getWindowManager().getDefaultDisplay();
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        display.getMetrics(outMetrics);
+        float screenWidth = outMetrics.widthPixels;
+        int dd = Math.round(screenWidth / posterWidth);
+        //tToast(""+dd);
+        return Math.round(dd);
+
+    }
+
+
+    private void tToast(String s) {
+        Context context = getApplicationContext();
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(context, s, duration);
+        toast.show();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -317,8 +399,6 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
         try {
 
             if(isOnline()){
-
-                //new loadDataInBackground().execute(new URL(urlJSON));
 
                 Bundle queryBundle = new Bundle();
                 queryBundle.putString(SEARCH_URL, urlJSON);
@@ -423,11 +503,6 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
     }
 
 
-    public Cursor getAllData()
-    {
-        mDb = dbHelper.getWritableDatabase();
-        Cursor res=mDb.rawQuery("select * from "+TABLE_NAME,null);
-        return res;
-    }
+
 
 }

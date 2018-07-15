@@ -1,5 +1,6 @@
 package com.example.rod.popularmovies_p2;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.content.AsyncTaskLoader;
@@ -18,11 +20,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.example.rod.popularmovies_p2.data.MovieContentPrivider;
 import com.example.rod.popularmovies_p2.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
@@ -124,10 +128,8 @@ public class childActivity extends AppCompatActivity
             movieID = intent2.getStringExtra("movieID");
             movieTrailer = String.format( getString(R.string.base_url_trailer), movieID, getString(R.string.APIKEY));
             movieReview = String.format( getString(R.string.base_url_review), movieID, getString(R.string.APIKEY));
-
             movieDetail.setId(movieID); //add to save later
-
-            Log.v("RAG","movie id intent"+movieID);
+            //Log.v("RAG","movie id intent"+movieID);
 
         }else{
             Log.v("RAG","no movie id");
@@ -183,13 +185,11 @@ public class childActivity extends AppCompatActivity
         //checa se esta na lista de favoritos e troca o bt;
         //
         //
-        if(hasMovie(movieDetail.getId())) {
-            //boolean aa = favTogglebutton.isChecked();
-            //Log.v("RAG",Boolean.toString(aa));
+        Boolean movieExist = hasMovie(movieDetail.getId());
+        Log.v("RAG",movieExist.toString());
 
-            //if(!favTogglebutton.isChecked()) {
-                favTogglebutton.toggle();
-            //}
+        if(movieExist) {
+            favTogglebutton.toggle();
         };
 
         //review
@@ -308,11 +308,6 @@ public class childActivity extends AppCompatActivity
                             if (jsonReviewResult != null) {
                                 deliverResult(jsonReviewResult);
                             } else {
-
-                                //Toast toast = Toast.makeText(getApplicationContext(), "start loading review, force load()",Toast.LENGTH_SHORT);
-                                //toast.show();
-                                //Log.v("RAG","forceLoad review()");
-
                                 this.forceLoad();
                             }
                         }
@@ -413,9 +408,6 @@ public class childActivity extends AppCompatActivity
                             deliverResult(jsonTrailerResult);
                         } else {
 
-                            Toast toast = Toast.makeText(getApplicationContext(), "start loading review, force load()",
-                                    Toast.LENGTH_SHORT);
-                            toast.show();
                             //Log.v("RAG","forceLoad review()");
                             this.forceLoad();
                         }
@@ -535,34 +527,25 @@ public class childActivity extends AppCompatActivity
     //END LOADER
     //
 
+
     //bt favorites
     public void toggleclick(View v) {
 
-        //Log.v("RAG","movie rating:"+movieDetail.getRating());
+        //Log.v("RAG","toggle bt checked:"+favTogglebutton.isChecked());
+        String movieid = movieDetail.getId();
 
         //add to fav
         if (favTogglebutton.isChecked()) {
 
-            if(hasMovie(movieDetail.getId())){
-                //Log.v("RAG","movie id key already exists:"+movieDetail.getId());
+            if(!hasMovie(movieid)){
+                addNewMovieToTable(movieDetail);
             }else{
-                //listMovies.add(item);
-                long numID = addNewMovieToTable(movieDetail);
 
-                //Log.v("RAG","movie id added:"+numID);
             }
 
         //remove from fav
         }else{
-
-            if(hasMovie(movieDetail.getId())){
-                boolean isDeleted = deleteData(movieDetail.getId());
-
-                //if(isDeleted) Log.v("RAG", "movie deleted");
-
-            }else{
-                Log.v("RAG", "no movie with id:" + movieDetail.getId());
-            }
+            int x = deleteMovie(movieid);
         }
     }
 
@@ -619,10 +602,9 @@ public class childActivity extends AppCompatActivity
     //
 
     //add a new movie to the db
-    private long addNewMovieToTable(Movies movie){
+    private void addNewMovieToTable(Movies movie){
 
-        mDb = dbHelper.getWritableDatabase();
-
+        //mDb = dbHelper.getWritableDatabase();
         long idMovieRecord = 0;
         try
         {
@@ -633,32 +615,42 @@ public class childActivity extends AppCompatActivity
             cv.put(COLUMN_SINOPSE, movie.getSinopse());
             cv.put(COLUMN_RATING, movie.getRating());
             cv.put(COLUMN_DURACAO, movie.getDuracao());
-            //cv.put(COLUMN_FAVORITOS, movie.getTitulo());
             cv.put(COLUMN_IMAGEPATH, movie.getPathtofile());
 
-            mDb.beginTransaction();
-            idMovieRecord =  mDb.insert(TABLE_NAME, null, cv);
-            mDb.setTransactionSuccessful();
+            Uri uri = getContentResolver().insert(
+                    MovieContract.MovieListEntry.CONTENT_URI, cv);
 
+            Toast.makeText(getBaseContext(),
+                    uri.toString(), Toast.LENGTH_LONG).show();
 
-            Log.v("RAG","moive id:"+movie.getId());
         }
         catch (SQLException e) {
             Log.v("RAG",e.toString());
             //too bad :(
         }
-        finally
-        {
-            mDb.endTransaction();
-
-            //close
-            if(mDb != null) mDb.close();
-        }
-
-        return idMovieRecord;
 
     }
 
+    //delete movieID
+    private int deleteMovie(String movieID)
+    {
+        int count = 0;
+        try
+        {
+
+            count = getContentResolver().delete(
+                    MovieContract.MovieListEntry.CONTENT_URI,
+                    "idmovie = ?",
+                    new String[]{movieID});
+
+            return count;
+        }
+        catch (SQLException e) {
+            Log.v("RAG",e.toString());
+            return count;
+        }
+
+    }
 
     //query for empty db
     private boolean hasDbRecords(){
@@ -692,7 +684,6 @@ public class childActivity extends AppCompatActivity
         return rowExists;
 
     }
-
 
 
     public boolean hasMovie(String id) {

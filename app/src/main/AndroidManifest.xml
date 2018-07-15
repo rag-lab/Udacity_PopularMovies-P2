@@ -35,6 +35,13 @@
 
 
         </activity>
+
+        <provider android:name="com.example.rod.popularmovies_p2.data.MovieContentPrivider"
+            android:authorities="com.example.rod.popularmovies__p2"
+            android:exported="false">
+            <grant-uri-permission android:pathPattern=".*" />
+        </provider>
+
     </application>
 
 </manifest>
