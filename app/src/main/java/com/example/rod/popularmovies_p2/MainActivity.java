@@ -66,7 +66,6 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //create/configure recyclerview
         recMainActivity = (RecyclerView) findViewById(R.id.recMainActivity);
         recMainActivity.setHasFixedSize(true);
 
@@ -78,7 +77,6 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
         recMainActivity.setAdapter(recyclerAdapter);
 
         urlJSON = String.format( getString(R.string.base_url_popular),getString(R.string.APIKEY));
-        Log.v("RAG", urlJSON);
 
         try {
 
@@ -94,11 +92,8 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                 Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
 
                 if (thumbsLoader == null) {
-                    //Log.v("RAG", "loader inicializado");
                     loaderManager.initLoader(thumbLoaderID, queryBundle, this);
                 } else {
-
-                    //Log.v("RAG", "loader re-inicializado");
                     loaderManager.restartLoader(thumbLoaderID, queryBundle, this);
                 }
 
@@ -124,25 +119,35 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
 
     @Override
     public void onRestart() {
+
         super.onRestart();
-        //tToast("onRestart");
+
+        Bundle queryBundle = new Bundle();
+        queryBundle.putString(SEARCH_URL, urlJSON);
+
+        LoaderManager loaderManager = getSupportLoaderManager();
+        Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
+
+        if (thumbsLoader == null) {
+            loaderManager.initLoader(thumbLoaderID, queryBundle, this);
+        } else {
+            loaderManager.restartLoader(thumbLoaderID, queryBundle, this);
+        }
+
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        //tToast("onResume");
     }
 
     @Override
     public void onPause() {
         super.onPause();
 
-        // save RecyclerView state
         mBundleRVState = new Bundle();
         Parcelable listState = recMainActivity.getLayoutManager().onSaveInstanceState();
         mBundleRVState.putParcelable(KEY_RECYCLER_STATE, listState);
-        tToast("onPause: listState saved");
 
     }
 
@@ -166,17 +171,12 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
             @Override
             protected void onStartLoading() {
 
-                // COMPLETED (6) If args is null, return.
-                /* If no arguments were passed, we don't have a query to perform. Simply return. */
                 if (args == null) return;
 
                 //pega do cache ou carrega
                 if (mResult != null) {
-                    Log.v("RAG","onStartLoading from cache() "+ mResult);
                     deliverResult(mResult);
                 } else {
-
-                    Log.v("RAG","forceLoad()");
                     this.forceLoad();
                 }
 
@@ -186,8 +186,6 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
             public Cursor loadInBackground() {
 
                 try {
-
-                    //Log.v("RAG", "loadInBackground():" + isOnline());
 
                     String searchQueryUrlString = args.getString(SEARCH_URL);
                     Cursor cursor;
@@ -199,11 +197,8 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                         URL urlSearch = new URL(searchQueryUrlString);
                         String strJsonResult = Util.getResponseFromHttpUrl(urlSearch);
 
-                        //mResult = strJsonResult;
-
                         JSONObject jsonObject = new JSONObject(strJsonResult);
                         JSONArray array = jsonObject.getJSONArray("results");
-                        //Log.v("RAG","strJsonResult:"+strJsonResult);
 
                         for (int i = 0; i < array.length(); i++) {
 
@@ -283,16 +278,21 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                                     favCursor.moveToNext();
                                 }
                             }else{
-                                Toast toast = Toast.makeText(getApplicationContext(), "No favorites yet",
-                                        Toast.LENGTH_SHORT);
-                                toast.show();
+
+                                runOnUiThread(new Runnable() {
+                                    public void run() {
+                                        Toast.makeText(getApplicationContext(), "No favorites yet :(", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
                             }
 
                             //mResult = favCursor;
                             favCursor.close();
 
                         } catch (Exception e) {
-                            tToast(e.toString());
+                            Log.e("RAG","exception:"+e.toString());
+                            //tToast(e.toString());
                         }
 
                     }
@@ -300,7 +300,7 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                 }
                 catch (IOException e1)
                 {
-                    Log.e("RAG", "Failed to asynchronously load data.");
+                    //Log.e("RAG", "Failed to asynchronously load data.");
                     e1.printStackTrace();
                 }
                 catch (JSONException e)
@@ -316,9 +316,7 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
 
             @Override
             public void deliverResult(Cursor data) {
-
-                //Log.v("RAG","deliverResult:"+githubJson);
-                //mResult = data;
+                mResult = data;
                 super.deliverResult(data);
             }
 
@@ -342,7 +340,6 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        Log.v("RAG", "onLoaderReset");
     }
 
     /*
@@ -407,10 +404,8 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                 Loader<String> thumbsLoader = loaderManager.getLoader(thumbLoaderID);
 
                 if (thumbsLoader == null) {
-                    //Log.v("RAG", "loader inicializado");
                     loaderManager.initLoader(thumbLoaderID, queryBundle, this);
                 } else {
-                    //Log.v("RAG", "loader re-inicializado");
                     loaderManager.restartLoader(thumbLoaderID, queryBundle, this);
                 }
 
@@ -437,72 +432,6 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
-
-
-
-    public Bitmap loadImageFromURL(String src){
-
-        String fileName = String.format("%d.png", System.currentTimeMillis());
-        Bitmap myBitmap;
-        //Log.v("RAG","loadImageFromURL:"+src.toString());
-
-        try {
-
-            URL url = new URL(src);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setDoInput(true);
-            connection.connect();
-            InputStream input = connection.getInputStream();
-
-            myBitmap = BitmapFactory.decodeStream(input);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-
-        return myBitmap;
-
-    }
-
-
-    public String saveBitmap(Bitmap bm, String name) throws Exception {
-
-        String tempFilePath = Environment.getExternalStorageDirectory() + "/moviedb/" +  name;
-        Log.v("RAG", "saveBitmap(name):"+tempFilePath);
-
-        File tempFile = new File(tempFilePath);
-
-        //file not exist
-        if (!tempFile.exists()) {
-
-            //create dir if not exists
-            if (!tempFile.getParentFile().exists()) {
-                tempFile.getParentFile().mkdirs();
-            }
-
-            tempFile.delete();
-            tempFile.createNewFile();
-
-            int quality = 100;
-            FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
-
-            BufferedOutputStream bos = new BufferedOutputStream(fileOutputStream);
-            bm.compress(Bitmap.CompressFormat.JPEG, quality, bos);
-
-            bos.flush();
-            bos.close();
-
-            bm.recycle();
-
-        }else{
-            Log.v("RAG", "  file already on phone:");
-        }
-
-        return tempFilePath;
-    }
-
-
 
 
 }

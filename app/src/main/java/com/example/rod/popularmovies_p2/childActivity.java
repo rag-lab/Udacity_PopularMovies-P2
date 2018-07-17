@@ -103,7 +103,6 @@ public class childActivity extends AppCompatActivity
         titulo = (TextView) findViewById(R.id.titulo);
         imgView = (ImageView) findViewById(R.id.thumb);
         ano = (TextView) findViewById(R.id.ano);
-        //duracao = (TextView) findViewById(R.id.duracao);
         sinopse = (TextView) findViewById(R.id.sinopse);
         rating = (TextView) findViewById(R.id.rating);
 
@@ -129,10 +128,9 @@ public class childActivity extends AppCompatActivity
             movieTrailer = String.format( getString(R.string.base_url_trailer), movieID, getString(R.string.APIKEY));
             movieReview = String.format( getString(R.string.base_url_review), movieID, getString(R.string.APIKEY));
             movieDetail.setId(movieID); //add to save later
-            //Log.v("RAG","movie id intent"+movieID);
 
         }else{
-            Log.v("RAG","no movie id");
+
         }
 
 
@@ -186,7 +184,6 @@ public class childActivity extends AppCompatActivity
         //
         //
         Boolean movieExist = hasMovie(movieDetail.getId());
-        Log.v("RAG",movieExist.toString());
 
         if(movieExist) {
             favTogglebutton.toggle();
@@ -240,19 +237,15 @@ public class childActivity extends AppCompatActivity
 
                 // COMPLETED (23) If the Loader was null, initialize it. Else, restart it.
                 if (reviewLoader == null) {
-                    //Log.v("RAG", "loader review inicializado");
                     loaderManager.initLoader(reviewLoaderID, queryBundle, this);
                 } else {
-                    //Log.v("RAG", "loader review restarted");
                     loaderManager.restartLoader(reviewLoaderID, queryBundle, this);
                 }
 
 
                 if (trailerLoader == null) {
-                    //Log.v("RAG", "loader trailer inicializado");
                     loaderManager.initLoader(trailerLoaderID, queryBundle, this);
                 } else {
-                    //Log.v("RAG", "loader trailer restarted");
                     loaderManager.restartLoader(trailerLoaderID, queryBundle, this);
                 }
 
@@ -276,8 +269,6 @@ public class childActivity extends AppCompatActivity
     //
     @Override
     public Loader<String> onCreateLoader(int id, final Bundle args) {
-
-        //Log.v("RAG","onCreateLoader id:"+ String.valueOf(id));
 
         switch(id)
         {
@@ -496,9 +487,6 @@ public class childActivity extends AppCompatActivity
     @Override
     public void onLoadFinished(Loader<String> loader, String data) {
 
-        //Log.v("RAG", "review onLoadFinished:"+loader.getId());
-        //Log.v("RAG", "data:"+data);
-
         switch(loader.getId())
         {
 
@@ -509,8 +497,6 @@ public class childActivity extends AppCompatActivity
                 trailerRecyclerView.setAdapter(trailerRecyclerAdapter);
 
             default:
-
-
         }
 
     }
@@ -518,20 +504,16 @@ public class childActivity extends AppCompatActivity
     @Override
     public void onLoaderReset(Loader<String> loader) {
 
-        //Toast toast = Toast.makeText(getApplicationContext(), "onLoaderReset() review",Toast.LENGTH_SHORT);
-        //toast.show();
-
     }
 
-    //
+    /*
     //END LOADER
-    //
+    */
 
 
     //bt favorites
     public void toggleclick(View v) {
 
-        //Log.v("RAG","toggle bt checked:"+favTogglebutton.isChecked());
         String movieid = movieDetail.getId();
 
         //add to fav
@@ -558,45 +540,6 @@ public class childActivity extends AppCompatActivity
     }
 
 
-    private Cursor getMovie(String movieID) {
-
-        /*
-       SQLiteDatabase db = this.getReadableDatabase();
-
-        Cursor cursor = db.query(TABLE_CONTACTS, new String[] { KEY_ID,
-                KEY_NAME, KEY_PH_NO }, KEY_ID + "=?",
-                new String[] { String.valueOf(id) }, null, null, null, null);
-        if (cursor != null)
-            cursor.moveToFirst();
-
-        Contact contact = new Contact(Integer.parseInt(cursor.getString(0)),
-                cursor.getString(1), cursor.getString(2));
-        // return contact
-        return contact;
-    }
-         */
-
-        MovieDbHelper dbHelper = new MovieDbHelper(this);
-        SQLiteDatabase mDB = dbHelper.getReadableDatabase();
-
-        String selection = COLUMN_IDMOVIE + "=?";
-        String[] selectionArgs = {movieID};
-
-        Cursor cursor = mDB.query(
-                TABLE_NAME,
-                null,
-                selection,
-                selectionArgs,
-                null,
-                MovieContract.MovieListEntry.COLUMN_TITULO,
-                "1"
-        );
-
-        return cursor;
-
-    }
-
-
     //
     // DB functions
     //
@@ -604,7 +547,6 @@ public class childActivity extends AppCompatActivity
     //add a new movie to the db
     private void addNewMovieToTable(Movies movie){
 
-        //mDb = dbHelper.getWritableDatabase();
         long idMovieRecord = 0;
         try
         {
@@ -620,12 +562,11 @@ public class childActivity extends AppCompatActivity
             Uri uri = getContentResolver().insert(
                     MovieContract.MovieListEntry.CONTENT_URI, cv);
 
-            Toast.makeText(getBaseContext(),
-                    uri.toString(), Toast.LENGTH_LONG).show();
+            //Toast.makeText(getBaseContext(),uri.toString(), Toast.LENGTH_LONG).show();
 
         }
         catch (SQLException e) {
-            Log.v("RAG",e.toString());
+            Log.v("SQLException ",e.toString());
             //too bad :(
         }
 
@@ -652,73 +593,28 @@ public class childActivity extends AppCompatActivity
 
     }
 
-    //query for empty db
-    private boolean hasDbRecords(){
-
-
-        Boolean rowExists = false;
-
-        try {
-
-            Cursor mCursor = mDb.query(TABLE_NAME,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    COLUMN_TITULO
-            );
-
-
-            if (mCursor.moveToFirst())
-            {
-                rowExists = true;
-            }
-
-        }
-        catch (SQLException e) {
-            Log.v("RAG","hasDbRecords:"+e.toString());
-            //too bad :(
-        }
-
-        return rowExists;
-
-    }
-
 
     public boolean hasMovie(String id) {
 
-        dbHelper = new MovieDbHelper(this);
-        mDb = dbHelper.getWritableDatabase();
+        boolean hasMovie=false;
 
-        Cursor cursor = null;
-        String selectString = "SELECT * FROM " + TABLE_NAME + " WHERE " + COLUMN_IDMOVIE + " =?";
+        String[] projection = new String[] { COLUMN_IMAGEPATH,
+                COLUMN_DURACAO,
+                COLUMN_ANO,
+                COLUMN_SINOPSE,
+                COLUMN_RATING,
+                COLUMN_IDMOVIE,
+                COLUMN_TITULO};
 
-        try {
-            //set string nside array to avoid erros with - character
-            cursor = mDb.rawQuery(selectString, new String[] {id});
-            return cursor.moveToNext();
-        } finally {
+        Cursor movieCursor = getContentResolver().query(MovieContract.MovieListEntry.CONTENT_URI,
+                projection,
+                COLUMN_IDMOVIE+" = ?",
+                new String[]{id},
+                MovieContract.MovieListEntry._ID);
 
-            //close
-            if (cursor != null) cursor.close();
-            if(mDb != null) mDb.close();
+         hasMovie = movieCursor.moveToFirst();
 
-        }
-    }
-
-
-    public boolean deleteData(String id)
-    {
-        mDb = dbHelper.getWritableDatabase();
-        return  mDb.delete(TABLE_NAME,  COLUMN_IDMOVIE+ " = ?",new String[] {id}) > 0;
-    }
-
-    public Cursor getAllData()
-    {
-        mDb = dbHelper.getWritableDatabase();
-        Cursor res=mDb.rawQuery("select * from "+TABLE_NAME,null);
-        return res;
+         return hasMovie;
     }
 
 
