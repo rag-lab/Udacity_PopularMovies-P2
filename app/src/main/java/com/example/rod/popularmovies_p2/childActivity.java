@@ -341,14 +341,21 @@ public class childActivity extends AppCompatActivity
                                 }
 
                                 if (array.length() == 1) {
-                                    reviewLabel.setText("Review:");
+									runOnUiThread(new Runnable() {
+										public void run() {
+											reviewLabel.setText("Review:");
+										}
+									});                                    
                                 }
 
                             } else {
-                                reviewLabel.setText("No reviews yet");
-                            }
+									runOnUiThread(new Runnable() {
+										public void run() {
+											reviewLabel.setText("No reviews yet");
+										}
+									});
 
-                            //Log.v("RAG", "listReviews size:" + listReviews.size());
+                            }
 
                         } catch (IOException e1) {
                             e1.printStackTrace();
