@@ -49,7 +49,9 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
     /* A constant to save and restore the URL that is being displayed */
     private static final String SEARCH_URL = "";
     private final String KEY_RECYCLER_STATE = "recycler_state";
+    private final String KEY_QUERY_STATE = "url_query";  //chave urlQuery
     private static Bundle mBundleRVState;
+    private Parcelable savedRecyclerLayoutState;
 
     private RecyclerView recMainActivity;
     private RecyclerAdapter recyclerAdapter;
@@ -76,7 +78,25 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
         recyclerAdapter = new RecyclerAdapter(listMovies, getBaseContext());
         recMainActivity.setAdapter(recyclerAdapter);
 
-        urlJSON = String.format( getString(R.string.base_url_popular),getString(R.string.APIKEY));
+        //get the saved query
+        if (savedInstanceState != null)
+        {
+            if(savedInstanceState.getSerializable(KEY_QUERY_STATE) != null)
+            {
+                urlJSON = (String)savedInstanceState.getSerializable(KEY_QUERY_STATE);
+            }
+
+            if(savedInstanceState.getParcelable(KEY_RECYCLER_STATE) != null)
+            {
+                savedRecyclerLayoutState = savedInstanceState.getParcelable(KEY_RECYCLER_STATE);
+            }
+
+        }
+        else
+        {
+            urlJSON = String.format( getString(R.string.base_url_popular),getString(R.string.APIKEY));
+        }
+
 
         try {
 
@@ -105,7 +125,8 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
                 toast.show();
             }
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -156,6 +177,24 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
     @Override
     public void onStop() {
         super.onStop();
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        //salva states
+        outState.putSerializable(KEY_QUERY_STATE, urlJSON);
+
+        //salva recyclerView
+        Parcelable listState = recMainActivity.getLayoutManager().onSaveInstanceState();
+        outState.putParcelable(KEY_RECYCLER_STATE, listState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
     }
 
     //
@@ -378,6 +417,7 @@ public class MainActivity extends android.support.v7.app.AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item){
 
         int menuId = item.getItemId();
+
 
         //popular
         if(menuId==R.id.menuit1){
